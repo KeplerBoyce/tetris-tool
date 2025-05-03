@@ -1,3 +1,4 @@
+use std::time::Instant;
 use macroquad::prelude::*;
 use crate::state::{Game, Piece, Rotation};
 use super::Config;
@@ -114,32 +115,131 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
 }
 
 pub fn handle_input(config: &Config, game: &mut Game) {
+    let now = Instant::now();
+
     if is_key_pressed(config.left) {
+        game.left_time = now;
+        game.left_priority = true;
         game.piece_col -= 1;
         if game.check_wall_intersect() {
             game.piece_col += 1;
         }
     }
+    // Handle left movement repetition
+    if is_key_down(config.left) {
+        if now.duration_since(game.left_time).as_millis() as u32 >= config.das {
+            game.left_das_activated = true;
+        }
+        // If left is more recently held than right and has been held long enough
+        if game.left_priority && game.left_das_activated &&
+                now.duration_since(game.left_time).as_millis() as u32 >= config.arr {
+            game.left_time = now;
+            // If ARR is 0 then repeat all the way, otherwise just move once
+            if config.arr == 0 {
+                loop {
+                    game.piece_col -= 1;
+                    if game.check_wall_intersect() {
+                        game.piece_col += 1;
+                        break;
+                    }
+                }
+            } else {
+                game.piece_col -= 1;
+                if game.check_wall_intersect() {
+                    game.piece_col += 1;
+                }
+            }
+        }
+    }
+    // Reset DAS when key is released
+    if is_key_released(config.left) {
+        game.left_das_activated = false;
+        game.left_priority = false;
+    }
+
     if is_key_pressed(config.right) {
+        game.right_time = now;
+        game.left_priority = false;
         game.piece_col += 1;
         if game.check_wall_intersect() {
             game.piece_col -= 1;
         }
     }
-    if is_key_pressed(config.soft_drop) {
-        let mut moved = false;
-        loop {
-            game.piece_row += 1;
-            if game.check_landing() {
-                game.piece_row -= 1;
-                if moved {
-                    game.refresh_last_time();
+    // Handle right movement repetition
+    if is_key_down(config.right) {
+        if now.duration_since(game.right_time).as_millis() as u32 >= config.das {
+            game.right_das_activated = true;
+        }
+        // If right is more recently held than left and has been held long enough
+        if !game.left_priority && game.right_das_activated &&
+                now.duration_since(game.right_time).as_millis() as u32 >= config.arr {
+            game.right_time = now;
+            // If ARR is 0 then repeat all the way, otherwise just move once
+            if config.arr == 0 {
+                loop {
+                    game.piece_col += 1;
+                    if game.check_wall_intersect() {
+                        game.piece_col -= 1;
+                        break;
+                    }
                 }
-                break;
+            } else {
+                game.piece_col += 1;
+                if game.check_wall_intersect() {
+                    game.piece_col -= 1;
+                }
             }
-            moved = true;
         }
     }
+    // Reset DAS when key is released
+    if is_key_released(config.right) {
+        game.right_das_activated = false;
+        game.left_priority = true;
+    }
+
+    if is_key_pressed(config.soft_drop) {
+        game.soft_drop_time = now;
+    }
+    // Handle soft drop repetition
+    if is_key_down(config.soft_drop) {
+        if now.duration_since(game.soft_drop_time).as_millis() as u32 >= config.sdr {
+            game.soft_drop_time = now;
+            // If SDR is 0 then repeat all the way, otherwise just move once
+            if config.sdr == 0 {
+                loop {
+                    game.piece_row += 1;
+                    if game.check_landing() {
+                        game.piece_row -= 1;
+                        break;
+                    } else {
+                        game.piece_row += 1;
+                        // This ensures that the grace period is only applied the first time the piece
+                        // touches the ground -- player can't tap soft drop repeatedly to refresh grace
+                        // period over and over
+                        if game.check_landing() {
+                            game.refresh_last_time();
+                            game.piece_row -= 1;
+                            break;
+                        }
+                        game.piece_row -= 1;
+                    }
+                }
+            } else {
+                game.piece_row += 1;
+                if game.check_landing() {
+                    game.piece_row -= 1;
+                } else {
+                    game.piece_row += 1;
+                    // Same as above
+                    if game.check_landing() {
+                        game.refresh_last_time();
+                    }
+                    game.piece_row -= 1;
+                }
+            }
+        }
+    }
+
     if is_key_pressed(config.hard_drop) {
         loop {
             game.piece_row += 1;
@@ -150,6 +250,7 @@ pub fn handle_input(config: &Config, game: &mut Game) {
             }
         }
     }
+
     if is_key_pressed(config.rotate_cw) {
         let old_rot = game.rotation;
         apply_cw(game);
@@ -171,6 +272,7 @@ pub fn handle_input(config: &Config, game: &mut Game) {
             apply_180(game);
         }
     }
+
     if is_key_pressed(config.hold) {
         let piece = game.piece;
         game.piece = game.hold;

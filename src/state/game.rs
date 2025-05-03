@@ -15,9 +15,13 @@ pub struct Game {
     pub queue: VecDeque<Piece>,
     pub rotation: Rotation,
     pub bag: VecDeque<Piece>,
-    pub gravity: f32, // Measured in blocks per second
-    pub soft_drop_time: u32, // Milliseconds before gravity places piece that is touching floor
-    last_time: Instant,
+    pub last_time: Instant, // Timestamp of when last gravity falling unit occurred
+    pub left_time: Instant, // Timestamp of when last left DAS unit occurred
+    pub right_time: Instant, // Timestamp of when last right DAS unit occurred
+    pub soft_drop_time: Instant, // Timestamp of when last softdrop unit occurred
+    pub left_das_activated: bool, // Becomes true when left key is held long enough for DAS
+    pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
+    pub left_priority: bool, // True when left is the most recently held key
 }
 
 impl Game {
@@ -31,9 +35,13 @@ impl Game {
             queue: VecDeque::new(),
             rotation: Rotation::Normal,
             bag: VecDeque::new(),
-            gravity: 2.0,
-            soft_drop_time: 500,
             last_time: Instant::now(),
+            left_time: Instant::now(),
+            right_time: Instant::now(),
+            soft_drop_time: Instant::now(),
+            left_das_activated: false,
+            right_das_activated: false,
+            left_priority: false,
         };
         init_queue(&mut game);
         game
@@ -103,13 +111,13 @@ impl Game {
         self.last_time = Instant::now();
     }
 
-    fn apply_gravity(&mut self) {
+    fn apply_gravity(&mut self, config: &Config) {
         let now = Instant::now();
         let fall_time = now.duration_since(self.last_time).as_millis() as u32;
         // Check if we have already touched the ground -- wait until soft drop time elapses
         self.piece_row += 1;
         if self.check_landing() {
-            if fall_time > self.soft_drop_time {
+            if fall_time > config.grace_period {
                 self.piece_row -= 1;
                 self.place_piece();
             } else {
@@ -119,7 +127,7 @@ impl Game {
         }
         self.piece_row -= 1;
         // Otherwise, apply gravity
-        if fall_time >= (1000.0 / self.gravity) as u32 {
+        if fall_time >= (1000.0 / config.gravity) as u32 {
             self.piece_row += 1;
             self.refresh_last_time();
             if self.check_landing() {
@@ -203,6 +211,6 @@ impl Game {
             self.refresh_last_time();
         }
         handle_input(config, self);
-        self.apply_gravity();
+        self.apply_gravity(config);
     }
 }

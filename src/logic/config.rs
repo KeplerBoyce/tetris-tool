@@ -9,6 +9,11 @@ pub struct Config {
     pub rotate_ccw: KeyCode,
     pub rotate_180: KeyCode,
     pub hold: KeyCode,
+    pub gravity: f32, // Measured in blocks per second
+    pub grace_period: u32, // Milliseconds before gravity places piece that is touching floor
+    pub das: u32, // Milliseconds before delayed auto-shift activates
+    pub arr: u32, // Milliseconds between each movement repetition during DAS
+    pub sdr: u32, // Milliseconds to fall one unit when soft dropping
 }
 
 impl Config {
@@ -22,6 +27,11 @@ impl Config {
             rotate_ccw: KeyCode::A,
             rotate_180: KeyCode::S,
             hold: KeyCode::W,
+            gravity: 2.0,
+            grace_period: 500,
+            das: 133,
+            arr: 0,
+            sdr: 0,
         }
     }
 }
