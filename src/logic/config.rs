@@ -30,8 +30,8 @@ impl Config {
             hold: KeyCode::W,
             reset: KeyCode::R,
             gravity: 2.0,
-            grace_period: 500,
-            das: 133,
+            grace_period: 750,
+            das: 100,
             arr: 0,
             sdr: 0,
         }

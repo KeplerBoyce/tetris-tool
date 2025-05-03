@@ -260,6 +260,12 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         apply_cw(game);
         if !attempt_kicks(game, old_rot) {
             apply_ccw(game);
+        } else {
+            game.piece_row += 1;
+            if game.check_landing() {
+                game.piece_row -= 1;
+                game.refresh_last_time();
+            }
         }
     }
     if is_key_pressed(config.rotate_ccw) {
@@ -267,6 +273,12 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         apply_ccw(game);
         if !attempt_kicks(game, old_rot) {
             apply_cw(game);
+        } else {
+            game.piece_row += 1;
+            if game.check_landing() {
+                game.piece_row -= 1;
+                game.refresh_last_time();
+            }
         }
     }
     if is_key_pressed(config.rotate_180) {
@@ -274,6 +286,12 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         apply_180(game);
         if !attempt_kicks(game, old_rot) {
             apply_180(game);
+        } else {
+            game.piece_row += 1;
+            if game.check_landing() {
+                game.piece_row -= 1;
+                game.refresh_last_time();
+            }
         }
     }
 

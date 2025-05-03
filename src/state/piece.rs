@@ -16,13 +16,13 @@ pub enum Piece {
 impl Piece {
     pub fn color(&self) -> Color {
         match self {
-            Piece::I => Color::new(0.0, 1.0, 1.0, 1.0),
-            Piece::J => BLUE,
-            Piece::L => ORANGE,
-            Piece::O => YELLOW,
-            Piece::S => GREEN,
-            Piece::T => MAGENTA,
-            Piece::Z => RED,
+            Piece::I => Color::from_hex(0x4dcdd1),
+            Piece::J => Color::from_hex(0x4d70d1),
+            Piece::L => Color::from_hex(0xdb9b4d),
+            Piece::O => Color::from_hex(0xdbcd4d),
+            Piece::S => Color::from_hex(0x63e06f),
+            Piece::T => Color::from_hex(0xdd87e0),
+            Piece::Z => Color::from_hex(0xe06363),
         }
     }
 
