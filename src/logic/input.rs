@@ -115,6 +115,10 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
 }
 
 pub fn handle_input(config: &Config, game: &mut Game) {
+    if is_key_pressed(config.reset) {
+        *game = Game::new();
+    }
+
     let now = Instant::now();
 
     if is_key_pressed(config.left) {
