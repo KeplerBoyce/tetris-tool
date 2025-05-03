@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use crate::util::window::tile_size;
+use super::Rotation;
 
 #[derive(Clone, Copy)]
 pub enum Piece {
@@ -15,7 +16,7 @@ pub enum Piece {
 impl Piece {
     pub fn color(&self) -> Color {
         match self {
-            Piece::I => WHITE,
+            Piece::I => Color::new(0.0, 1.0, 1.0, 1.0),
             Piece::J => BLUE,
             Piece::L => ORANGE,
             Piece::O => YELLOW,
@@ -62,6 +63,62 @@ impl Piece {
                 draw_rectangle(x + unit, y + unit, 2.0 * unit, unit, self.color());
                 (3.0 * unit, 2.0 * unit)
             },
+        }
+    }
+
+    pub fn offset_map(&self, rotation: Rotation) -> [(i8, i8); 4] {
+        match self {
+            Piece::I => {
+                match rotation {
+                    Rotation::Normal => [(0, -1), (0, 0), (0, 1), (0, 2)],
+                    Rotation::Cw => [(-1, 0), (0, 0), (1, 0), (2, 0)],
+                    Rotation::Ccw => [(-2, 0), (-1, 0), (0, 0), (1, 0)],
+                    Rotation::Flip => [(0, -2), (0, -1), (0, 0), (0, 1)],
+                }
+            }
+            Piece::J => {
+                match rotation {
+                    Rotation::Normal => [(-1, -1), (0, -1), (0, 0), (0, 1)],
+                    Rotation::Cw => [(-1, 1), (-1, 0), (0, 0), (1, 0)],
+                    Rotation::Ccw => [(-1, 0), (0, 0), (1, 0), (1, -1)],
+                    Rotation::Flip => [(0, -1), (0, 0), (0, 1), (1, 1)],
+                }
+            }
+            Piece::L => {
+                match rotation {
+                    Rotation::Normal => [(-1, 1), (0, -1), (0, 0), (0, 1)],
+                    Rotation::Cw => [(1, 1), (-1, 0), (0, 0), (1, 0)],
+                    Rotation::Ccw => [(-1, 0), (0, 0), (1, 0), (-1, -1)],
+                    Rotation::Flip => [(0, -1), (0, 0), (0, 1), (1, -1)],
+                }
+            }
+            Piece::O => {
+                [(0, 0), (0, 1), (1, 0), (1, 1)]
+            }
+            Piece::S => {
+                match rotation {
+                    Rotation::Normal => [(-1, 0), (-1, 1), (0, 0), (0, -1)],
+                    Rotation::Cw => [(-1, 0), (0, 0), (0, 1), (1, 1)],
+                    Rotation::Ccw => [(-1, -1), (0, -1), (0, 0), (1, 0)],
+                    Rotation::Flip => [(0, 0), (0, 1), (1, -1), (1, 0)],
+                }
+            }
+            Piece::T => {
+                match rotation {
+                    Rotation::Normal => [(-1, 0), (0, -1), (0, 0), (0, 1)],
+                    Rotation::Cw => [(-1, 0), (0, 0), (0, 1), (1, 0)],
+                    Rotation::Ccw => [(-1, 0), (0, -1), (0, 0), (1, 0)],
+                    Rotation::Flip => [(0, -1), (0, 0), (0, 1), (1, 0)],
+                }
+            }
+            Piece::Z => {
+                match rotation {
+                    Rotation::Normal => [(-1, 0), (-1, -1), (0, 0), (0, 1)],
+                    Rotation::Cw => [(-1, 1), (0, 0), (0, 1), (1, 0)],
+                    Rotation::Ccw => [(-1, 0), (0, -1), (0, 0), (1, -1)],
+                    Rotation::Flip => [(0, 0), (0, -1), (1, 1), (1, 0)],
+                }
+            }
         }
     }
 }

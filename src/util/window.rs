@@ -12,7 +12,7 @@ pub fn tile_size() -> f32 {
 
 #[inline(always)]
 pub fn board_width() -> f32 {
-    ((screen_width() / 2.0 - MARGIN).min(screen_height() / 2.0 - MARGIN) as i32 / 10 * 10) as f32
+    ((screen_width() / 2.0 - MARGIN).min(screen_height() / 2.3 - MARGIN) as i32 / 10 * 10) as f32
 }
 
 #[inline(always)]
@@ -27,7 +27,7 @@ pub fn board_y() -> f32 {
 
 #[inline(always)]
 pub fn board_height() -> f32 {
-    board_width() * 2.0
+    board_width() * 2.3
 }
 
 #[inline(always)]

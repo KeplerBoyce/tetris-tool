@@ -13,6 +13,12 @@ impl Tile {
         }
     }
 
+    pub fn from(piece: Piece) -> Self {
+        Self {
+            piece: Some(piece),
+        }
+    }
+
     pub fn color(&self) -> Color {
         if let Some(piece) = self.piece {
             piece.color()
