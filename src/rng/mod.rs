@@ -5,8 +5,9 @@ use std::sync::{Mutex, MutexGuard};
 
 lazy_static! {
     static ref RNG: Mutex<StdRng> = {
-        let seed = 100;
-        Mutex::new(StdRng::seed_from_u64(seed))
+        // let seed = 100;
+        // Mutex::new(StdRng::seed_from_u64(seed))
+        Mutex::new(StdRng::from_os_rng())
     };
 }
 
