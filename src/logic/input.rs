@@ -5,9 +5,15 @@ use super::Config;
 pub fn handle_input(config: &Config, game: &mut Game) {
     if is_key_pressed(config.left) {
         game.piece_col -= 1;
+        if game.check_wall_intersect() {
+            game.piece_col += 1;
+        }
     }
     if is_key_pressed(config.right) {
         game.piece_col += 1;
+        if game.check_wall_intersect() {
+            game.piece_col -= 1;
+        }
     }
     if is_key_pressed(config.soft_drop) {
         loop {
@@ -53,6 +59,11 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         }
     }
     if is_key_pressed(config.hold) {
-
+        let piece = game.piece;
+        game.piece = game.hold;
+        game.hold = piece;
+        game.piece_row = 1;
+        game.piece_col = 4;
+        game.rotation = Rotation::Normal;
     }
 }

@@ -32,12 +32,12 @@ pub fn board_height() -> f32 {
 
 #[inline(always)]
 pub fn hold_x() -> f32 {
-    board_x() - hold_width()
+    board_x() - hold_width() - BOARD_GAP
 }
 
 #[inline(always)]
 pub fn hold_width() -> f32 {
-    board_x() - BOARD_GAP
+    board_width() / 2.0
 }
 
 #[inline(always)]
@@ -47,5 +47,5 @@ pub fn queue_x() -> f32 {
 
 #[inline(always)]
 pub fn queue_width() -> f32 {
-    screen_width() - (board_x() + board_width() + BOARD_GAP)
+    board_width() / 2.0
 }
