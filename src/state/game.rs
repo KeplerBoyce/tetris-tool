@@ -31,7 +31,7 @@ impl Game {
             queue: VecDeque::new(),
             rotation: Rotation::Normal,
             bag: VecDeque::new(),
-            gravity: 1.0,
+            gravity: 2.0,
             soft_drop_time: 500,
             last_time: Instant::now(),
         };
@@ -39,9 +39,10 @@ impl Game {
         game
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&mut self) {
         self.board.draw(board_x(), board_y());
         self.draw_piece(board_x(), board_y());
+        self.draw_shadow(board_x(), board_y());
         self.draw_queue(queue_x(), board_y(), 0.5);
         self.draw_hold(hold_x(), board_y(), 0.5);
         self.board.draw_grid(board_x(), board_y());
@@ -72,6 +73,29 @@ impl Game {
                     piece.color(),
                 );
             }
+        }
+    }
+
+    fn draw_shadow(&mut self, x: f32, y: f32) {
+        if let Some(piece) = self.piece {
+            let old_piece_row = self.piece_row;
+            loop {
+                self.piece_row += 1;
+                if self.check_landing() {
+                    self.piece_row -= 1;
+                    break;
+                }
+            }
+            for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
+                draw_rectangle(
+                    x + (self.piece_col + offset_col) as f32 * tile_size() + GRID_THICKNESS / 2.0,
+                    y + (self.piece_row + offset_row) as f32 * tile_size() + GRID_THICKNESS / 2.0,
+                    tile_size() - GRID_THICKNESS,
+                    tile_size() - GRID_THICKNESS,
+                    piece.color().with_alpha(0.5),
+                );
+            }
+            self.piece_row = old_piece_row;
         }
     }
 
@@ -139,6 +163,34 @@ impl Game {
                 self.board.tiles[row][col] = Tile::from(piece);
                 self.piece = None;
                 self.rotation = Rotation::Normal;
+            }
+        }
+        // Handle clearing lines
+        let mut cleared = [false; 20];
+        'row: for r in 3..23 {
+            for c in 0..10 {
+                if self.board.tiles[r][c].piece.is_none() {
+                    continue 'row;
+                }
+            }
+            // If we're here, this means that the row was completely full -- mark it to clear
+            cleared[r - 3] = true;
+        }
+        // Shift rows downwards to remove cleared lines
+        let mut offset = 0;
+        for r in (3..23).rev() {
+            if cleared[r - 3] {
+                offset += 1;
+                continue;
+            }
+            for c in 0..10 {
+                self.board.tiles[r + offset][c] = self.board.tiles[r][c]
+            }
+        }
+        // Finally, make sure to erase the top lines that didn't get overwritten by shift
+        for r in 0..offset {
+            for c in 0..10 {
+                self.board.tiles[r + 3][c].piece = None;
             }
         }
     }
