@@ -16,12 +16,17 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         }
     }
     if is_key_pressed(config.soft_drop) {
+        let mut moved = false;
         loop {
             game.piece_row += 1;
             if game.check_landing() {
                 game.piece_row -= 1;
+                if moved {
+                    game.refresh_last_time();
+                }
                 break;
             }
+            moved = true;
         }
     }
     if is_key_pressed(config.hard_drop) {

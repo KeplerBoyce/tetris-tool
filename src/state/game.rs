@@ -31,7 +31,7 @@ impl Game {
             queue: VecDeque::new(),
             rotation: Rotation::Normal,
             bag: VecDeque::new(),
-            gravity: 5.0,
+            gravity: 1.0,
             soft_drop_time: 500,
             last_time: Instant::now(),
         };
@@ -75,6 +75,10 @@ impl Game {
         }
     }
 
+    pub fn refresh_last_time(&mut self) {
+        self.last_time = Instant::now();
+    }
+
     fn apply_gravity(&mut self) {
         let now = Instant::now();
         let fall_time = now.duration_since(self.last_time).as_millis() as u32;
@@ -93,7 +97,7 @@ impl Game {
         // Otherwise, apply gravity
         if fall_time >= (1000.0 / self.gravity) as u32 {
             self.piece_row += 1;
-            self.last_time = Instant::now();
+            self.refresh_last_time();
             if self.check_landing() {
                 self.piece_row -= 1;
                 self.place_piece();
@@ -144,7 +148,7 @@ impl Game {
             get_next_piece(self);
             self.piece_row = 1;
             self.piece_col = 4;
-            self.last_time = Instant::now();
+            self.refresh_last_time();
         }
         handle_input(config, self);
         self.apply_gravity();
