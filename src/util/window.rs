@@ -36,6 +36,12 @@ pub fn hold_x() -> f32 {
 }
 
 #[inline(always)]
+pub fn hold_y() -> f32 {
+    board_y() + 3.0 * board_height() / 23.0
+}
+
+
+#[inline(always)]
 pub fn hold_width() -> f32 {
     board_width() / 2.0
 }
@@ -43,6 +49,11 @@ pub fn hold_width() -> f32 {
 #[inline(always)]
 pub fn queue_x() -> f32 {
     board_x() + board_width() + BOARD_GAP
+}
+
+#[inline(always)]
+pub fn queue_y() -> f32 {
+    board_y() + 3.0 * board_height() / 23.0
 }
 
 #[inline(always)]

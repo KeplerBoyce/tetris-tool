@@ -22,6 +22,7 @@ pub struct Game {
     pub left_das_activated: bool, // Becomes true when left key is held long enough for DAS
     pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
     pub left_priority: bool, // True when left is the most recently held key
+    pub undo_stack: Vec<(Board, Option<Piece>)>,
 }
 
 impl Game {
@@ -42,6 +43,7 @@ impl Game {
             left_das_activated: false,
             right_das_activated: false,
             left_priority: false,
+            undo_stack: vec![(Board::new(), None)],
         };
         init_queue(&mut game);
         game
@@ -51,14 +53,15 @@ impl Game {
         self.board.draw(board_x(), board_y());
         self.draw_piece(board_x(), board_y());
         self.draw_shadow(board_x(), board_y());
-        self.draw_queue(queue_x(), board_y(), 0.5);
-        self.draw_hold(hold_x(), board_y(), 0.5);
+        self.draw_queue(queue_x(), queue_y(), 0.75);
+        self.draw_hold(hold_x(), hold_y(), 0.75);
         self.board.draw_grid(board_x(), board_y());
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32) {
         let mut height: f32 = 0.0;
-        for &piece in self.queue.iter() {
+        // Draw only the first 5 pieces in queue in case we undid moves
+        for &piece in self.queue.iter().take(5) {
             let (_, h) = piece.draw(x, y + height, scale);
             height += h + QUEUE_GAP;
         }
@@ -164,6 +167,7 @@ impl Game {
     }
 
     pub fn place_piece(&mut self) {
+        self.undo_stack.push((self.board, self.piece));
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
                 let row = (self.piece_row + offset_row) as usize;

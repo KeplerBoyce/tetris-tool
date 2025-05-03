@@ -15,7 +15,10 @@ pub fn get_next_piece(game: &mut Game) {
     if game.bag.len() == 0 {
         gen_bag(game);
     }
-    game.queue.push_back(game.bag.pop_front().expect("Game bag empty!"));
+    // Only push if queue would be too short otherwise
+    if game.queue.len() < 5 {
+        game.queue.push_back(game.bag.pop_front().expect("Game bag empty!"));
+    }
 }
 
 pub fn init_queue(game: &mut Game) {

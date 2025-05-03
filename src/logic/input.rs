@@ -119,6 +119,21 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         *game = Game::new();
     }
 
+    if is_key_pressed(config.undo) {
+        if let Some((board, piece)) = game.undo_stack.pop() {
+            // Add current piece back into start of queue
+            if let Some(curr_piece) = game.piece {
+                game.queue.push_front(curr_piece);
+            }
+            // Restore previous board state and piece
+            game.board = board;
+            game.piece = piece;
+            game.piece_row = 1;
+            game.piece_col = 4;
+            game.rotation = Rotation::Normal;
+        }
+    }
+
     let now = Instant::now();
 
     if is_key_pressed(config.left) {

@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 use crate::util::window::*;
 use crate::state::Tile;
 
+#[derive(Clone, Copy)]
 pub struct Board {
     pub tiles: [[Tile; 10]; 23],
 }
