@@ -137,3 +137,23 @@ pub fn queue_width() -> f32 {
 pub fn queue_height() -> f32 {
     board_height() - (queue_y() - board_y())
 }
+
+#[inline(always)]
+pub fn piece_num_x() -> f32 {
+    queue_x()
+}
+
+#[inline(always)]
+pub fn piece_num_y() -> f32 {
+    board_y()
+}
+
+#[inline(always)]
+pub fn piece_num_width() -> f32 {
+    queue_width()
+}
+
+#[inline(always)]
+pub fn piece_num_height() -> f32 {
+    queue_y() - board_y() - board_gap()
+}

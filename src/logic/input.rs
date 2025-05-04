@@ -114,7 +114,12 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
     return false;
 }
 
-pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
+pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting: bool) {
+    // If we are waiting for a keybind input, don't move in the game
+    if waiting {
+        return;
+    }
+
     if is_key_pressed(config.reset) {
         *game = Game::new();
         *stats = Stats::new();

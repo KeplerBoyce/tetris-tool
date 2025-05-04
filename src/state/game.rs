@@ -60,6 +60,7 @@ impl Game {
         self.draw_queue(queue_x(), queue_y(), 0.75, font);
         self.draw_hold(hold_x(), hold_y(), 0.75, font);
         self.draw_stats(finesse_x(), finesse_y(), font, stats);
+        self.draw_piece_num(piece_num_x(), piece_num_y(), font, stats);
         self.board.draw_grid(board_x(), board_y());
         Game::draw_borders();
     }
@@ -82,7 +83,9 @@ impl Game {
         // Finesse outline
         draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
         // Queue outline
-        draw_outline(queue_x(), queue_y(), hold_width(), queue_height(), grid_thickness(), WHITE);
+        draw_outline(queue_x(), queue_y(), queue_width(), queue_height(), grid_thickness(), WHITE);
+        // Piece num outline
+        draw_outline(piece_num_x(), piece_num_y(), piece_num_width(), piece_num_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -93,6 +96,15 @@ impl Game {
             let (_, h) = piece.draw(x + margin(), y + height, scale);
             height += h + queue_gap();
         }
+    }
+
+    fn draw_piece_num(&self, x: f32, y: f32, font: Font, stats: &Stats) {
+        let bag = stats.pieces / 7 + 1;
+        let piece = stats.pieces % 7 + 1;
+        draw_text_ex(&format!("Bag: {}", bag), x + margin(),
+                y + tile_size(), text_normal(font, WHITE));
+        draw_text_ex(&format!("Piece: {}/7", piece), x + margin(),
+                y + tile_size() + text_size_normal(), text_normal(font, WHITE));
     }
 
     fn draw_hold(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -259,14 +271,14 @@ impl Game {
         }
     }
 
-    pub fn step(&mut self, config: &Config, stats: &mut Stats) {
+    pub fn step(&mut self, config: &Config, stats: &mut Stats, waiting: bool) {
         if self.piece.is_none() {
             get_next_piece(self);
             self.piece_row = 1;
             self.piece_col = 4;
             self.refresh_last_time();
         }
-        handle_input(config, stats, self);
+        handle_input(config, stats, self, waiting);
         self.apply_gravity(config, stats);
     }
 }
