@@ -278,9 +278,9 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         } else {
             game.piece_row += 1;
             if game.check_landing() {
-                game.piece_row -= 1;
                 game.refresh_last_time();
             }
+            game.piece_row -= 1;
         }
     }
     if is_key_pressed(config.rotate_ccw) {
@@ -291,9 +291,9 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         } else {
             game.piece_row += 1;
             if game.check_landing() {
-                game.piece_row -= 1;
                 game.refresh_last_time();
             }
+            game.piece_row -= 1;
         }
     }
     if is_key_pressed(config.rotate_180) {
@@ -304,9 +304,9 @@ pub fn handle_input(config: &Config, game: &mut Game) {
         } else {
             game.piece_row += 1;
             if game.check_landing() {
-                game.piece_row -= 1;
                 game.refresh_last_time();
             }
+            game.piece_row -= 1;
         }
     }
 
