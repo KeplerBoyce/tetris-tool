@@ -98,16 +98,22 @@ impl Game {
                 }
             }
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
+                let mut color = piece.color();
+                color.a = 0.5;
                 draw_rectangle(
                     x + (self.piece_col + offset_col) as f32 * tile_size() + GRID_THICKNESS / 2.0,
                     y + (self.piece_row + offset_row) as f32 * tile_size() + GRID_THICKNESS / 2.0,
                     tile_size() - GRID_THICKNESS,
                     tile_size() - GRID_THICKNESS,
-                    piece.color().with_alpha(0.5),
+                    color,
                 );
             }
             self.piece_row = old_piece_row;
         }
+    }
+
+    fn draw_finesse(&self, x: f32, y: f32) {
+
     }
 
     pub fn refresh_last_time(&mut self) {
@@ -118,17 +124,19 @@ impl Game {
         let now = Instant::now();
         let fall_time = now.duration_since(self.last_time).as_millis() as u32;
         // Check if we have already touched the ground -- wait until soft drop time elapses
-        self.piece_row += 1;
-        if self.check_landing() {
-            if fall_time > config.grace_period {
-                self.piece_row -= 1;
-                self.place_piece();
-            } else {
-                self.piece_row -= 1;
-                return;
+        if config.gravity > 0.0 {
+            self.piece_row += 1;
+            if self.check_landing() {
+                if fall_time > config.grace_period {
+                    self.piece_row -= 1;
+                    self.place_piece();
+                } else {
+                    self.piece_row -= 1;
+                    return;
+                }
             }
+            self.piece_row -= 1;
         }
-        self.piece_row -= 1;
         // Otherwise, apply gravity
         if fall_time >= (1000.0 / config.gravity) as u32 {
             self.piece_row += 1;
