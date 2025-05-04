@@ -1,9 +1,11 @@
 use egui_macroquad::egui;
+use macroquad::window::screen_width;
 use crate::logic::Config;
 use super::lock_game_x;
 
 pub fn draw_ui(config: &mut Config) {
     egui_macroquad::ui(|egui_ctx| {
+        egui_ctx.set_pixels_per_point(screen_width() / 1000.0);
         egui::SidePanel::left("game_settings")
             .resizable(false)
             .show(egui_ctx, |ui| {

@@ -99,7 +99,7 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
                 let row = game.piece_row + kick_row + offset_row;
                 let col = game.piece_col + kick_col + offset_col;
                 
-                if col < 0 || col > 9 || row > 22 ||
+                if col < 0 || col > 9 || row < 0 || row > 22 ||
                         game.board.tiles[row as usize][col as usize].piece.is_some() {
                     continue 'kick;
                 }

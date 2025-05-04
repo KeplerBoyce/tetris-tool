@@ -229,21 +229,21 @@ impl Game {
             }
         }
         // Handle clearing lines
-        let mut cleared = [false; 20];
-        'row: for r in 3..23 {
+        let mut cleared = [false; 23];
+        'row: for r in 0..23 {
             for c in 0..10 {
                 if self.board.tiles[r][c].piece.is_none() {
                     continue 'row;
                 }
             }
             // If we're here, this means that the row was completely full -- mark it to clear
-            cleared[r - 3] = true;
+            cleared[r] = true;
             stats.lines += 1;
         }
         // Shift rows downwards to remove cleared lines
         let mut offset = 0;
-        for r in (3..23).rev() {
-            if cleared[r - 3] {
+        for r in (0..23).rev() {
+            if cleared[r] {
                 offset += 1;
                 continue;
             }

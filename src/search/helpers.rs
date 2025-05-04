@@ -38,7 +38,6 @@ pub fn get_finesse_faults(board: &Board, piece: Piece, moves: u8, row: u8, col: 
     let target_state = SearchState::new(row as i8, col as i8, rotation, piece);
     match location_map.get(&target_state) {
         Some(&num_moves) => {
-            println!("{}", num_moves);
             (moves as i8 - num_moves as i8).max(0) as u8
         },
         None => 0,
