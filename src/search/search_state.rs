@@ -1,4 +1,5 @@
 use crate::state::{Board, Piece, Rotation};
+use super::Movement;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SearchState {
@@ -29,16 +30,16 @@ impl SearchState {
         false
     }
 
-    pub fn successors(&self, board: &Board) -> Vec<Self> {
+    pub fn successors(&self, board: &Board) -> Vec<(Self, Movement)> {
         vec![
-            self.left(board),
-            self.das_left(board),
-            self.right(board),
-            self.das_right(board),
-            self.drop(board),
-            self.rotate_cw(board),
-            self.rotate_ccw(board),
-            self.rotate_180(board),
+            (self.left(board), Movement::Left),
+            (self.das_left(board), Movement::DasLeft),
+            (self.right(board), Movement::Right),
+            (self.das_right(board), Movement::DasRight),
+            (self.drop(board), Movement::SoftDrop),
+            (self.rotate_cw(board), Movement::RotateCw),
+            (self.rotate_ccw(board), Movement::RotateCcw),
+            (self.rotate_180(board), Movement::Rotate180),
         ]
     }
 
