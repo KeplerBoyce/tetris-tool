@@ -18,10 +18,10 @@ impl Board {
         for r in 0..23 {
             for c in 0..10 {
                 draw_rectangle(
-                    x + c as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    y + r as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    tile_size() - GRID_THICKNESS,
-                    tile_size() - GRID_THICKNESS,
+                    x + c as f32 * tile_size() + grid_thickness() / 2.0,
+                    y + r as f32 * tile_size() + grid_thickness() / 2.0,
+                    tile_size() - grid_thickness(),
+                    tile_size() - grid_thickness(),
                     self.tiles[r][c].color(),
                 );
             }
@@ -36,7 +36,7 @@ impl Board {
                 y + r as f32 * tile_size(),
                 x + board_width(),
                 y + r as f32 * tile_size(),
-                GRID_THICKNESS,
+                grid_thickness(),
                 if r == 3 || r == 23 {
                     WHITE
                 } else {
@@ -48,10 +48,10 @@ impl Board {
         for c in 0..=10 {
             draw_line(
                 x + c as f32 * tile_size(),
-                y + 3.0 * tile_size() + GRID_THICKNESS / 2.0,
+                y + 3.0 * tile_size() + grid_thickness() / 2.0,
                 x + c as f32 * tile_size(),
-                y + board_height() - GRID_THICKNESS / 2.0,
-                GRID_THICKNESS,
+                y + board_height() - grid_thickness() / 2.0,
+                grid_thickness(),
                 if c == 0 || c == 10 {
                     WHITE
                 } else {

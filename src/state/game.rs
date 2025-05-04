@@ -49,27 +49,59 @@ impl Game {
         game
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, font: Font) {
         self.board.draw(board_x(), board_y());
         self.draw_piece(board_x(), board_y());
         self.draw_shadow(board_x(), board_y());
-        self.draw_queue(queue_x(), queue_y(), 0.75);
-        self.draw_hold(hold_x(), hold_y(), 0.75);
+        self.draw_queue(queue_x(), queue_y(), 0.75, font);
+        self.draw_hold(hold_x(), hold_y(), 0.75, font);
         self.board.draw_grid(board_x(), board_y());
+        Game::draw_borders();
     }
 
-    fn draw_queue(&self, x: f32, y: f32, scale: f32) {
-        let mut height: f32 = 0.0;
+    fn draw_borders() {
+        fn draw_outline(x: f32, y: f32, w: f32, h: f32, thickness: f32, color: Color) {
+            let x1 = x - thickness / 2.0;
+            let x2 = x1 + w;
+            let y1 = y - thickness / 2.0;
+            let y2 = y1 + h;
+            draw_rectangle(x1, y1, w + thickness, thickness, color);
+            draw_rectangle(x1, y1, thickness, h + thickness, color);
+            draw_rectangle(x1, y2, w + thickness, thickness, color);
+            draw_rectangle(x2, y1, thickness, h + thickness, color);
+        }
+        // Board outline
+        draw_outline(board_x(), board_y(), board_width(), board_height(), grid_thickness(), WHITE);
+        // Hold outline
+        draw_outline(hold_x(), hold_y(), hold_width(), hold_height(), grid_thickness(), WHITE);
+        // Queue outline
+        draw_outline(queue_x(), queue_y(), hold_width(), queue_height(), grid_thickness(), WHITE);
+    }
+
+    fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
+        draw_text_ex("QUEUE", x + margin(), y + tile_size(), TextParams {
+            font,
+            font_size: (tile_size() * 0.75) as u16,
+            color: WHITE,
+            ..Default::default()
+        });
+        let mut height: f32 = tile_size() * 1.5 + margin();
         // Draw only the first 5 pieces in queue in case we undid moves
         for &piece in self.queue.iter().take(5) {
-            let (_, h) = piece.draw(x, y + height, scale);
-            height += h + QUEUE_GAP;
+            let (_, h) = piece.draw(x + margin(), y + height, scale);
+            height += h + queue_gap();
         }
     }
 
-    fn draw_hold(&self, x: f32, y: f32, scale: f32) {
+    fn draw_hold(&self, x: f32, y: f32, scale: f32, font: Font) {
+        draw_text_ex("HOLD", x + margin(), y + tile_size(), TextParams {
+            font,
+            font_size: (tile_size() * 0.75) as u16,
+            color: WHITE,
+            ..Default::default()
+        });
         if let Some(hold) = self.hold {
-            hold.draw(x, y, scale);
+            hold.draw(x + margin(), y + tile_size() * 1.5 + margin(), scale);
         }
     }
 
@@ -77,10 +109,10 @@ impl Game {
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
                 draw_rectangle(
-                    x + (self.piece_col + offset_col) as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    y + (self.piece_row + offset_row) as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    tile_size() - GRID_THICKNESS,
-                    tile_size() - GRID_THICKNESS,
+                    x + (self.piece_col + offset_col) as f32 * tile_size() + grid_thickness() / 2.0,
+                    y + (self.piece_row + offset_row) as f32 * tile_size() + grid_thickness() / 2.0,
+                    tile_size() - grid_thickness(),
+                    tile_size() - grid_thickness(),
                     piece.color(),
                 );
             }
@@ -101,10 +133,10 @@ impl Game {
                 let mut color = piece.color();
                 color.a = 0.5;
                 draw_rectangle(
-                    x + (self.piece_col + offset_col) as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    y + (self.piece_row + offset_row) as f32 * tile_size() + GRID_THICKNESS / 2.0,
-                    tile_size() - GRID_THICKNESS,
-                    tile_size() - GRID_THICKNESS,
+                    x + (self.piece_col + offset_col) as f32 * tile_size() + grid_thickness() / 2.0,
+                    y + (self.piece_row + offset_row) as f32 * tile_size() + grid_thickness() / 2.0,
+                    tile_size() - grid_thickness(),
+                    tile_size() - grid_thickness(),
                     color,
                 );
             }

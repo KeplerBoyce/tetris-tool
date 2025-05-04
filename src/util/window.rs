@@ -1,10 +1,27 @@
 use macroquad::prelude::*;
 use crate::ui::lock_game_x;
 
-pub const MARGIN: f32 = 10.0;
-pub const GRID_THICKNESS: f32 = 2.0;
-pub const BOARD_GAP: f32 = 30.0;
-pub const QUEUE_GAP: f32 = 20.0;
+const SCREEN_MARGIN: f32 = 10.0;
+
+#[inline(always)]
+pub fn margin() -> f32 {
+    tile_size() / 3.0
+}
+
+#[inline(always)]
+pub fn grid_thickness() -> f32 {
+    (tile_size() / 15.0) as u32 as f32
+}
+
+#[inline(always)]
+pub fn board_gap() -> f32 {
+    tile_size() / 2.0
+}
+
+#[inline(always)]
+pub fn queue_gap() -> f32 {
+    tile_size() / 3.0
+}
 
 #[inline(always)]
 pub fn game_x() -> f32 {
@@ -28,7 +45,7 @@ pub fn tile_size() -> f32 {
 
 #[inline(always)]
 pub fn board_width() -> f32 {
-    ((width() / 2.0 - MARGIN).min(height() / 2.3 - MARGIN) as i32 / 10 * 10) as f32
+    ((width() / 2.0 - SCREEN_MARGIN).min(height() / 2.3 - SCREEN_MARGIN) as i32 / 10 * 10) as f32
 }
 
 #[inline(always)]
@@ -48,7 +65,7 @@ pub fn board_height() -> f32 {
 
 #[inline(always)]
 pub fn hold_x() -> f32 {
-    board_x() - hold_width() - BOARD_GAP
+    board_x() - hold_width() - board_gap()
 }
 
 #[inline(always)]
@@ -59,12 +76,17 @@ pub fn hold_y() -> f32 {
 
 #[inline(always)]
 pub fn hold_width() -> f32 {
-    board_width() / 2.0 - BOARD_GAP
+    board_width() / 2.0 - board_gap()
+}
+
+#[inline(always)]
+pub fn hold_height() -> f32 {
+    board_height() - (hold_y() - board_y())
 }
 
 #[inline(always)]
 pub fn queue_x() -> f32 {
-    board_x() + board_width() + BOARD_GAP
+    board_x() + board_width() + board_gap()
 }
 
 #[inline(always)]
@@ -74,5 +96,10 @@ pub fn queue_y() -> f32 {
 
 #[inline(always)]
 pub fn queue_width() -> f32 {
-    board_width() / 2.0 - BOARD_GAP
+    board_width() / 2.0 - board_gap()
+}
+
+#[inline(always)]
+pub fn queue_height() -> f32 {
+    board_height() - (queue_y() - board_y())
 }
