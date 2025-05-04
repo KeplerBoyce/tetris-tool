@@ -2,14 +2,14 @@ use crate::state::{Board, Piece, Rotation};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SearchState {
-    row: u8,
-    col: u8,
+    row: i8,
+    col: i8,
     rotation: Rotation,
     piece: Piece,
 }
 
 impl SearchState {
-    pub fn new(row: u8, col: u8, rotation: Rotation, piece: Piece) -> Self {
+    pub fn new(row: i8, col: i8, rotation: Rotation, piece: Piece) -> Self {
         Self {
             row,
             col,
@@ -22,7 +22,7 @@ impl SearchState {
         for &(offset_row, offset_col) in self.piece.offset_map(self.rotation).iter() {
             let r = self.row as i8 + offset_row;
             let c = self.col as i8 + offset_col;
-            if r > 22 || c < 0 || c > 9 || board.tiles[r as usize][c as usize].piece.is_some() {
+            if r < 0 || r > 22 || c < 0 || c > 9 || board.tiles[r as usize][c as usize].piece.is_some() {
                 return true;
             }
         }
@@ -35,7 +35,7 @@ impl SearchState {
             self.das_left(board),
             self.right(board),
             self.das_right(board),
-            self.gravity(board),
+            self.drop(board),
             self.rotate_cw(board),
             self.rotate_ccw(board),
             self.rotate_180(board),
@@ -80,15 +80,6 @@ impl SearchState {
                 new_state.col -= 1;
                 break;
             }
-        }
-        new_state
-    }
-
-    pub fn gravity(&self, board: &Board) -> Self {
-        let mut new_state = self.clone();
-        new_state.row += 1;
-        if new_state.intersects(board) {
-            new_state.row -= 1;
         }
         new_state
     }
@@ -144,8 +135,8 @@ impl SearchState {
     fn apply_kicks(&mut self, board: &Board, old_rot: Rotation) {
         let original = self.clone();
         for &(kick_row, kick_col) in self.piece.kick_map(old_rot, self.rotation).iter() {
-            self.row = original.row.saturating_add(kick_row as u8);
-            self.col = original.col.saturating_add(kick_col as u8);
+            self.row += kick_row;
+            self.col += kick_col;
             if self.intersects(board) {
                 continue;
             }

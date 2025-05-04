@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 use std::collections::VecDeque;
 use std::time::Instant;
+use crate::search::get_finesse_faults;
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
 use crate::util::font::*;
@@ -24,6 +25,7 @@ pub struct Game {
     pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
     pub left_priority: bool, // True when left is the most recently held key
     pub undo_stack: Vec<(Board, Option<Piece>, Stats)>,
+    pub prev_stats: Stats,
 }
 
 impl Game {
@@ -44,7 +46,8 @@ impl Game {
             left_das_activated: false,
             right_das_activated: false,
             left_priority: false,
-            undo_stack: vec![(Board::new(), None, Stats::new())],
+            undo_stack: vec![],
+            prev_stats: Stats::new(),
         };
         init_queue(&mut game);
         game
@@ -209,8 +212,13 @@ impl Game {
     }
 
     pub fn place_piece(&mut self, stats: &mut Stats) {
+        let moves = stats.inputs - self.prev_stats.inputs;
+        if let Some(piece) = self.piece {
+            stats.faults += get_finesse_faults(&self.board, piece, moves as u8, self.piece_row as u8, self.piece_col as u8, self.rotation) as u32;
+        }
         stats.pieces += 1;
-        self.undo_stack.push((self.board, self.piece, *stats));
+        self.undo_stack.push((self.board, self.piece, self.prev_stats));
+        self.prev_stats = *stats;
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
                 let row = (self.piece_row + offset_row) as usize;

@@ -117,10 +117,11 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
 pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     if is_key_pressed(config.reset) {
         *game = Game::new();
+        *stats = Stats::new();
     }
 
     if is_key_pressed(config.undo) {
-        if let Some((board, piece)) = game.undo_stack.pop() {
+        if let Some((board, piece, old_stats)) = game.undo_stack.pop() {
             // Add current piece back into start of queue
             if let Some(curr_piece) = game.piece {
                 game.queue.push_front(curr_piece);
@@ -131,12 +132,15 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
             game.piece_row = 1;
             game.piece_col = 4;
             game.rotation = Rotation::Normal;
+            game.prev_stats = old_stats;
+            *stats = old_stats;
         }
     }
 
     let now = Instant::now();
 
     if is_key_pressed(config.left) {
+        stats.inputs += 1;
         game.left_time = now;
         game.left_priority = true;
         game.piece_col -= 1;
@@ -177,6 +181,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     }
 
     if is_key_pressed(config.right) {
+        stats.inputs += 1;
         game.right_time = now;
         game.left_priority = false;
         game.piece_col += 1;
@@ -217,6 +222,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     }
 
     if is_key_pressed(config.soft_drop) {
+        stats.inputs += 1;
         game.soft_drop_time = now;
     }
     // Handle soft drop repetition
@@ -260,6 +266,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     }
 
     if is_key_pressed(config.hard_drop) {
+        stats.inputs += 1;
         loop {
             game.piece_row += 1;
             if game.check_landing() {
@@ -271,6 +278,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     }
 
     if is_key_pressed(config.rotate_cw) {
+        stats.inputs += 1;
         let old_rot = game.rotation;
         apply_cw(game);
         if !attempt_kicks(game, old_rot) {
@@ -284,6 +292,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
         }
     }
     if is_key_pressed(config.rotate_ccw) {
+        stats.inputs += 1;
         let old_rot = game.rotation;
         apply_ccw(game);
         if !attempt_kicks(game, old_rot) {
@@ -297,6 +306,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
         }
     }
     if is_key_pressed(config.rotate_180) {
+        stats.inputs += 1;
         let old_rot = game.rotation;
         apply_180(game);
         if !attempt_kicks(game, old_rot) {
