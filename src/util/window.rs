@@ -10,7 +10,7 @@ pub fn margin() -> f32 {
 
 #[inline(always)]
 pub fn grid_thickness() -> f32 {
-    (tile_size() / 15.0) as u32 as f32
+    ((tile_size() / 15.0) as u32 as f32).max(1.0)
 }
 
 #[inline(always)]
@@ -21,6 +21,21 @@ pub fn board_gap() -> f32 {
 #[inline(always)]
 pub fn queue_gap() -> f32 {
     tile_size() / 3.0
+}
+
+#[inline(always)]
+pub fn text_size_small() -> f32 {
+    ((0.75 * tile_size()) as u32 / 10 * 10) as f32
+}
+
+#[inline(always)]
+pub fn text_size_normal() -> f32 {
+    (tile_size() as u32 / 10 * 10) as f32
+}
+
+#[inline(always)]
+pub fn text_size_large() -> f32 {
+    ((1.5 * tile_size()) as u32 / 10 * 10) as f32
 }
 
 #[inline(always)]
@@ -73,7 +88,6 @@ pub fn hold_y() -> f32 {
     board_y() + 3.0 * board_height() / 23.0
 }
 
-
 #[inline(always)]
 pub fn hold_width() -> f32 {
     board_width() / 2.0 - board_gap()
@@ -81,7 +95,27 @@ pub fn hold_width() -> f32 {
 
 #[inline(always)]
 pub fn hold_height() -> f32 {
-    board_height() - (hold_y() - board_y())
+    (board_height() - (hold_y() - board_y())) / 4.0
+}
+
+#[inline(always)]
+pub fn finesse_x() -> f32 {
+    hold_x()
+}
+
+#[inline(always)]
+pub fn finesse_y() -> f32 {
+    hold_y() + hold_height()
+}
+
+#[inline(always)]
+pub fn finesse_width() -> f32 {
+    hold_width()
+}
+
+#[inline(always)]
+pub fn finesse_height() -> f32 {
+    (board_height() - (hold_y() - board_y())) / 3.0
 }
 
 #[inline(always)]

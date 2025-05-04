@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use std::time::Instant;
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
+use crate::util::font::*;
 use crate::util::window::*;
 use super::{Board, Tile};
 
@@ -22,7 +23,7 @@ pub struct Game {
     pub left_das_activated: bool, // Becomes true when left key is held long enough for DAS
     pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
     pub left_priority: bool, // True when left is the most recently held key
-    pub undo_stack: Vec<(Board, Option<Piece>)>,
+    pub undo_stack: Vec<(Board, Option<Piece>, Stats)>,
 }
 
 impl Game {
@@ -43,18 +44,19 @@ impl Game {
             left_das_activated: false,
             right_das_activated: false,
             left_priority: false,
-            undo_stack: vec![(Board::new(), None)],
+            undo_stack: vec![(Board::new(), None, Stats::new())],
         };
         init_queue(&mut game);
         game
     }
 
-    pub fn draw(&mut self, font: Font) {
+    pub fn draw(&mut self, font: Font, stats: &Stats) {
         self.board.draw(board_x(), board_y());
         self.draw_piece(board_x(), board_y());
         self.draw_shadow(board_x(), board_y());
         self.draw_queue(queue_x(), queue_y(), 0.75, font);
         self.draw_hold(hold_x(), hold_y(), 0.75, font);
+        self.draw_stats(finesse_x(), finesse_y(), font, stats);
         self.board.draw_grid(board_x(), board_y());
         Game::draw_borders();
     }
@@ -74,18 +76,15 @@ impl Game {
         draw_outline(board_x(), board_y(), board_width(), board_height(), grid_thickness(), WHITE);
         // Hold outline
         draw_outline(hold_x(), hold_y(), hold_width(), hold_height(), grid_thickness(), WHITE);
+        // Finesse outline
+        draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
         // Queue outline
         draw_outline(queue_x(), queue_y(), hold_width(), queue_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
-        draw_text_ex("QUEUE", x + margin(), y + tile_size(), TextParams {
-            font,
-            font_size: (tile_size() * 0.75) as u16,
-            color: WHITE,
-            ..Default::default()
-        });
-        let mut height: f32 = tile_size() * 1.5 + margin();
+        draw_text_ex("QUEUE", x + margin(), y + tile_size(), text_large(font, WHITE));
+        let mut height: f32 = text_size_large() + 2.0 * margin();
         // Draw only the first 5 pieces in queue in case we undid moves
         for &piece in self.queue.iter().take(5) {
             let (_, h) = piece.draw(x + margin(), y + height, scale);
@@ -94,14 +93,9 @@ impl Game {
     }
 
     fn draw_hold(&self, x: f32, y: f32, scale: f32, font: Font) {
-        draw_text_ex("HOLD", x + margin(), y + tile_size(), TextParams {
-            font,
-            font_size: (tile_size() * 0.75) as u16,
-            color: WHITE,
-            ..Default::default()
-        });
+        draw_text_ex("HOLD", x + margin(), y + tile_size(), text_large(font, WHITE));
         if let Some(hold) = self.hold {
-            hold.draw(x + margin(), y + tile_size() * 1.5 + margin(), scale);
+            hold.draw(x + margin(), y + text_size_large() + 2.0 * margin(), scale);
         }
     }
 
@@ -144,15 +138,23 @@ impl Game {
         }
     }
 
-    fn draw_finesse(&self, x: f32, y: f32) {
-
+    fn draw_stats(&self, x: f32, y: f32, font: Font, stats: &Stats) {
+        draw_text_ex("STATS", x + margin(), y + tile_size(), text_large(font, WHITE));
+        draw_text_ex(&format!("Pieces: {}", stats.pieces), x + margin(),
+                y + text_size_large() + 2.0 * margin(), text_normal(font, WHITE));
+        draw_text_ex(&format!("Lines: {}", stats.lines), x + margin(),
+                y + text_size_large() + 2.0 * margin() + text_size_normal(), text_normal(font, WHITE));
+        draw_text_ex(&format!("Inputs: {}", stats.inputs), x + margin(),
+                y + text_size_large() + 2.0 * margin() + 2.0 * text_size_normal(), text_normal(font, WHITE));
+        draw_text_ex(&format!("Faults: {}", stats.faults), x + margin(),
+                y + text_size_large() + 2.0 * margin() + 3.0 * text_size_normal(), text_normal(font, WHITE));
     }
 
     pub fn refresh_last_time(&mut self) {
         self.last_time = Instant::now();
     }
 
-    fn apply_gravity(&mut self, config: &Config) {
+    fn apply_gravity(&mut self, config: &Config, stats: &mut Stats) {
         let now = Instant::now();
         let fall_time = now.duration_since(self.last_time).as_millis() as u32;
         // Check if we have already touched the ground -- wait until soft drop time elapses
@@ -161,7 +163,7 @@ impl Game {
             if self.check_landing() {
                 if fall_time > config.grace_period {
                     self.piece_row -= 1;
-                    self.place_piece();
+                    self.place_piece(stats);
                 } else {
                     self.piece_row -= 1;
                     return;
@@ -175,7 +177,7 @@ impl Game {
             self.refresh_last_time();
             if self.check_landing() {
                 self.piece_row -= 1;
-                self.place_piece();
+                self.place_piece(stats);
             }
         }
     }
@@ -206,8 +208,9 @@ impl Game {
         return false;
     }
 
-    pub fn place_piece(&mut self) {
-        self.undo_stack.push((self.board, self.piece));
+    pub fn place_piece(&mut self, stats: &mut Stats) {
+        stats.pieces += 1;
+        self.undo_stack.push((self.board, self.piece, *stats));
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
                 let row = (self.piece_row + offset_row) as usize;
@@ -227,6 +230,7 @@ impl Game {
             }
             // If we're here, this means that the row was completely full -- mark it to clear
             cleared[r - 3] = true;
+            stats.lines += 1;
         }
         // Shift rows downwards to remove cleared lines
         let mut offset = 0;
@@ -247,14 +251,14 @@ impl Game {
         }
     }
 
-    pub fn step(&mut self, config: &Config) {
+    pub fn step(&mut self, config: &Config, stats: &mut Stats) {
         if self.piece.is_none() {
             get_next_piece(self);
             self.piece_row = 1;
             self.piece_col = 4;
             self.refresh_last_time();
         }
-        handle_input(config, self);
-        self.apply_gravity(config);
+        handle_input(config, stats, self);
+        self.apply_gravity(config, stats);
     }
 }

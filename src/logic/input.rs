@@ -1,7 +1,7 @@
 use std::time::Instant;
 use macroquad::prelude::*;
 use crate::state::{Game, Piece, Rotation};
-use super::Config;
+use super::{Config, Stats};
 
 fn apply_cw(game: &mut Game) {
     game.rotation = match game.rotation {
@@ -114,7 +114,7 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
     return false;
 }
 
-pub fn handle_input(config: &Config, game: &mut Game) {
+pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game) {
     if is_key_pressed(config.reset) {
         *game = Game::new();
     }
@@ -264,7 +264,7 @@ pub fn handle_input(config: &Config, game: &mut Game) {
             game.piece_row += 1;
             if game.check_landing() {
                 game.piece_row -= 1;
-                game.place_piece();
+                game.place_piece(stats);
                 break;
             }
         }
