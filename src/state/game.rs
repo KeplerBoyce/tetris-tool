@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use std::collections::VecDeque;
 use std::time::Instant;
-use crate::search::{get_finesse_faults, Movement};
+use crate::search::{find_pcs, get_finesse_faults, Movement};
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
 use crate::util::font::*;
@@ -251,6 +251,7 @@ impl Game {
             stats.faults += num_faults as u32;
             self.finesse_path = path;
         }
+
         stats.pieces += 1;
         // Saving stuff on undo stack
         self.undo_stack.push((self.board, self.piece, self.prev_stats));
@@ -302,6 +303,9 @@ impl Game {
             self.piece_row = 1;
             self.piece_col = 4;
             self.refresh_last_time();
+            // Check for PC solutions
+            let pcs = find_pcs(self);
+            println!("{:?}", pcs);
         }
         handle_input(config, stats, self, waiting);
         self.apply_gravity(config, stats);

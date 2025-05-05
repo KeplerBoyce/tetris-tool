@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use crate::util::window::tile_size;
 use super::Rotation;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Piece {
     I,
     J,

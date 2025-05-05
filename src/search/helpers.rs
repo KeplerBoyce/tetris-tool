@@ -2,9 +2,39 @@ use std::collections::{HashSet, HashMap, VecDeque};
 use crate::state::{Board, Game, Piece, Rotation};
 use super::{Movement, Pc, PcState, SearchState};
 
-// Returns a map of all possible final locations to the number of moves they take
-pub fn get_locations(board: &Board, piece: Piece) -> HashMap<SearchState, Vec<Movement>> {
-    // Queue of possible final placements
+// Returns a set of all possible final locations
+pub fn get_locations(board: &Board, piece: Piece) -> HashSet<SearchState> {
+    // Set of possible final placements
+    let mut locations: HashSet<SearchState> = HashSet::new();
+    // Queue of states in search tree
+    let mut q: VecDeque<SearchState> = VecDeque::from(
+        vec![SearchState::new(1, 4, Rotation::Normal, piece)]
+    );
+    let mut visited: HashSet<SearchState> = HashSet::new();
+
+    while let Some(state) = q.pop_front() {
+        if visited.contains(&state) {
+            continue;
+        }
+        visited.insert(state);
+        // Add this position if it hasn't been found already
+        let dropped = state.drop(board);
+        if !locations.contains(&dropped) && !locations.contains(&dropped.symmetrical()) {
+            locations.insert(dropped);
+        }
+        for &(successor, _) in state.successors(board).iter() {
+            if visited.contains(&successor) {
+                continue;
+            }
+            q.push_back(successor);
+        }
+    }
+    locations
+}
+
+// Returns a map of all possible final locations to the optimal sequence of moves to place it there
+pub fn get_locations_with_finesse(board: &Board, piece: Piece) -> HashMap<SearchState, Vec<Movement>> {
+    // Map of possible final placements
     let mut locations: HashMap<SearchState, Vec<Movement>> = HashMap::new();
     // Queue of (state, prev_nodes index) states in search tree
     let mut q: VecDeque<(SearchState, usize)> = VecDeque::from(
@@ -57,7 +87,7 @@ pub fn get_finesse_faults(
     col: u8,
     rotation: Rotation,
 ) -> (u8, Option<Vec<Movement>>) {
-    let location_map = get_locations(board, piece);
+    let location_map = get_locations_with_finesse(board, piece);
     let target_state = SearchState::new(row as i8, col as i8, rotation, piece);
     match location_map.get(&target_state) {
         Some(path) => {
@@ -72,23 +102,38 @@ pub fn get_finesse_faults(
     }
 }
 
-// Returns vec of all 4L PC solves from current position and queue
-pub fn find_4l_pcs(game: &Game) -> Vec<Pc> {
-    let mut solves: Vec<Pc> = Vec::new();
-    let mut q: VecDeque<PcState> = VecDeque::from(vec![PcState::from(game)]);
-    let mut visited: HashSet<PcState> = HashSet::new();
+// Returns vec of all PC solves it can find from current position and queue
+pub fn find_pcs(game: &Game) -> Vec<Pc> {
+    // First, check if we should even search at all
+    let initial_state = PcState::from(game, 4);
+    if initial_state.fails_early(&Vec::from(game.queue.clone())) {
+        return Vec::new();
+    }
 
-    while let Some(state) = q.pop_front() {
+    let mut solves: Vec<Pc> = Vec::new();
+    let mut stack: Vec<PcState> = vec![initial_state];
+    let mut visited: HashSet<PcState> = HashSet::new();
+    let queue = Vec::from(game.queue.clone());
+
+    while let Some(state) = stack.pop() {
+        if visited.len() % 10000 == 0 {
+            println!("{}", visited.len());
+        }
         if visited.contains(&state) {
             continue;
         }
-        visited.insert(state.clone());
+        visited.insert(state);
 
-        for successor in state.successors().iter() {
-            if visited.contains(successor) {
+        if state.is_solved() {
+            solves.push(Pc::from(&state));
+            println!("Found solve");
+        }
+
+        for &successor in state.successors(&queue).iter() {
+            if visited.contains(&successor) {
                 continue;
             }
-            q.push_back(successor.clone());
+            stack.push(successor);
         }
     }
     solves

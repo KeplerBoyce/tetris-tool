@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use macroquad::prelude::*;
 use crate::util::window::*;
 use crate::state::Tile;
@@ -70,5 +71,20 @@ impl Board {
             new_board.tiles[r as usize][c as usize] = Tile::from(piece);
         }
         new_board
+    }
+}
+
+impl Debug for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for r in 0..23 {
+            for c in 0..10 {
+                match self.tiles[r][c].piece {
+                    Some(piece) => write!(f, "{:?}", piece)?,
+                    None => write!(f, "-")?,
+                };
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
