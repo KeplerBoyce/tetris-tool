@@ -203,4 +203,82 @@ impl SearchState {
         self.row = original.row;
         self.col = original.col;
     }
+
+    pub fn symmetrical(&self) -> Self {
+        match (self.piece, self.rotation) {
+            (Piece::I, Rotation::Normal) => Self {
+                row: self.row,
+                col: self.col + 1,
+                rotation: Rotation::Flip,
+                piece: Piece::I,
+            },
+            (Piece::I, Rotation::Cw) => Self {
+                row: self.row + 1,
+                col: self.col,
+                rotation: Rotation::Ccw,
+                piece: Piece::I,
+            },
+            (Piece::I, Rotation::Ccw) => Self {
+                row: self.row - 1,
+                col: self.col,
+                rotation: Rotation::Cw,
+                piece: Piece::I,
+            },
+            (Piece::I, Rotation::Flip) => Self {
+                row: self.row,
+                col: self.col - 1,
+                rotation: Rotation::Normal,
+                piece: Piece::I,
+            },
+            (Piece::S, Rotation::Normal) => Self {
+                row: self.row - 1,
+                col: self.col,
+                rotation: Rotation::Flip,
+                piece: Piece::S,
+            },
+            (Piece::S, Rotation::Cw) => Self {
+                row: self.row,
+                col: self.col + 1,
+                rotation: Rotation::Ccw,
+                piece: Piece::S,
+            },
+            (Piece::S, Rotation::Ccw) => Self {
+                row: self.row,
+                col: self.col - 1,
+                rotation: Rotation::Cw,
+                piece: Piece::S,
+            },
+            (Piece::S, Rotation::Flip) => Self {
+                row: self.row + 1,
+                col: self.col,
+                rotation: Rotation::Normal,
+                piece: Piece::S,
+            },
+            (Piece::Z, Rotation::Normal) => Self {
+                row: self.row - 1,
+                col: self.col,
+                rotation: Rotation::Flip,
+                piece: Piece::Z,
+            },
+            (Piece::Z, Rotation::Cw) => Self {
+                row: self.row,
+                col: self.col + 1,
+                rotation: Rotation::Ccw,
+                piece: Piece::Z,
+            },
+            (Piece::Z, Rotation::Ccw) => Self {
+                row: self.row,
+                col: self.col - 1,
+                rotation: Rotation::Cw,
+                piece: Piece::Z,
+            },
+            (Piece::Z, Rotation::Flip) => Self {
+                row: self.row + 1,
+                col: self.col,
+                rotation: Rotation::Normal,
+                piece: Piece::Z,
+            },
+            _ => *self,
+        }
+    }
 }

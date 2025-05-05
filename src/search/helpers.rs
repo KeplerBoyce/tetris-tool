@@ -34,7 +34,8 @@ pub fn get_locations(board: &Board, piece: Piece) -> HashMap<SearchState, Vec<Mo
                     break;
                 }
             }
-            locations.insert(dropped, Vec::from(path));
+            locations.insert(dropped, Vec::from(path.clone()));
+            locations.insert(dropped.symmetrical(), Vec::from(path));
         }
         for &(successor, action) in state.successors(board).iter() {
             if visited.contains(&successor) {
