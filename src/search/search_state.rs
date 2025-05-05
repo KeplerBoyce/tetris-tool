@@ -122,7 +122,7 @@ impl SearchState {
                 },
             }
         }
-        new_state.apply_kicks(board, self.rotation);
+        new_state.apply_kicks(board, self);
         new_state
     }
 
@@ -151,7 +151,7 @@ impl SearchState {
                 },
             }
         }
-        new_state.apply_kicks(board, self.rotation);
+        new_state.apply_kicks(board, self);
         new_state
     }
 
@@ -184,13 +184,13 @@ impl SearchState {
                 },
             }
         }
-        new_state.apply_kicks(board, self.rotation);
+        new_state.apply_kicks(board, self);
         new_state
     }
 
-    fn apply_kicks(&mut self, board: &Board, old_rot: Rotation) {
+    fn apply_kicks(&mut self, board: &Board, orig_state: &Self) {
         let original = self.clone();
-        for &(kick_row, kick_col) in self.piece.kick_map(old_rot, self.rotation).iter() {
+        for &(kick_row, kick_col) in self.piece.kick_map(orig_state.rotation, self.rotation).iter() {
             self.row = original.row + kick_row;
             self.col = original.col + kick_col;
             if self.intersects(board) {
@@ -200,8 +200,7 @@ impl SearchState {
             return;
         }
         // If none of the kicks worked, leave original state
-        self.row = original.row;
-        self.col = original.col;
+        *self = *orig_state;
     }
 
     pub fn symmetrical(&self) -> Self {
