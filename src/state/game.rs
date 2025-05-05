@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use std::collections::VecDeque;
 use std::time::Instant;
-use crate::search::get_finesse_faults;
+use crate::search::{get_finesse_faults, Movement};
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
 use crate::util::font::*;
@@ -26,6 +26,7 @@ pub struct Game {
     pub left_priority: bool, // True when left is the most recently held key
     pub undo_stack: Vec<(Board, Option<Piece>, Stats)>,
     pub prev_stats: Stats,
+    pub finesse_path: Option<Vec<Movement>>,
 }
 
 impl Game {
@@ -46,8 +47,9 @@ impl Game {
             left_das_activated: false,
             right_das_activated: false,
             left_priority: false,
-            undo_stack: vec![],
+            undo_stack: Vec::new(),
             prev_stats: Stats::new(),
+            finesse_path: None,
         };
         init_queue(&mut game);
         game
@@ -59,9 +61,10 @@ impl Game {
         self.draw_shadow(board_x(), board_y());
         self.draw_queue(queue_x(), queue_y(), 0.75, font);
         self.draw_hold(hold_x(), hold_y(), 0.75, font);
-        self.draw_stats(finesse_x(), finesse_y(), font, stats);
+        self.draw_stats(stats_x(), stats_y(), font, stats);
         self.draw_piece_num(piece_num_x(), piece_num_y(), font, stats);
         self.board.draw_grid(board_x(), board_y());
+        self.draw_finesse_path(finesse_x(), finesse_y(), font);
         Game::draw_borders();
     }
 
@@ -81,11 +84,13 @@ impl Game {
         // Hold outline
         draw_outline(hold_x(), hold_y(), hold_width(), hold_height(), grid_thickness(), WHITE);
         // Finesse outline
-        draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
+        draw_outline(stats_x(), stats_y(), stats_width(), stats_height(), grid_thickness(), WHITE);
         // Queue outline
         draw_outline(queue_x(), queue_y(), queue_width(), queue_height(), grid_thickness(), WHITE);
         // Piece num outline
         draw_outline(piece_num_x(), piece_num_y(), piece_num_width(), piece_num_height(), grid_thickness(), WHITE);
+        // Finesse error text outline
+        draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -165,6 +170,13 @@ impl Game {
                 y + text_size_large() + 2.0 * margin() + 3.0 * text_size_normal(), text_normal(font, WHITE));
     }
 
+    fn draw_finesse_path(&self, x: f32, y: f32, font: Font) {
+        if let Some(path) = &self.finesse_path {
+            draw_text_ex(&format!("{:?}", path), x + margin(),
+                    y + tile_size(), text_normal(font, Color::new(1.0, 0.5, 0.5, 1.0)));
+        }
+    }
+
     pub fn refresh_last_time(&mut self) {
         self.last_time = Instant::now();
     }
@@ -226,7 +238,9 @@ impl Game {
     pub fn place_piece(&mut self, stats: &mut Stats) {
         let moves = stats.inputs - self.prev_stats.inputs;
         if let Some(piece) = self.piece {
-            stats.faults += get_finesse_faults(&self.board, piece, moves as u8, self.piece_row as u8, self.piece_col as u8, self.rotation) as u32;
+            let (num_faults, path) = get_finesse_faults(&self.board, piece, moves as u8, self.piece_row as u8, self.piece_col as u8, self.rotation);
+            stats.faults += num_faults as u32;
+            self.finesse_path = path;
         }
         stats.pieces += 1;
         self.undo_stack.push((self.board, self.piece, self.prev_stats));

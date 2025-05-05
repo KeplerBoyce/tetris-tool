@@ -105,6 +105,23 @@ impl SearchState {
             Rotation::Ccw => Rotation::Normal,
             Rotation::Flip => Rotation::Ccw,
         };
+        // Handle weird I rotations
+        if new_state.piece == Piece::I {
+            match new_state.rotation {
+                Rotation::Normal => {
+                    new_state.row -= 1;
+                },
+                Rotation::Cw => {
+                    new_state.col += 1;
+                },
+                Rotation::Ccw => {
+                    new_state.col -= 1;
+                },
+                Rotation::Flip => {
+                    new_state.row += 1;
+                },
+            }
+        }
         new_state.apply_kicks(board, self.rotation);
         new_state
     }
@@ -117,6 +134,23 @@ impl SearchState {
             Rotation::Ccw => Rotation::Flip,
             Rotation::Flip => Rotation::Cw,
         };
+        // Handle weird I rotations
+        if new_state.piece == Piece::I {
+            match new_state.rotation {
+                Rotation::Normal => {
+                    new_state.col -= 1;
+                },
+                Rotation::Cw => {
+                    new_state.row -= 1;
+                },
+                Rotation::Ccw => {
+                    new_state.row += 1;
+                },
+                Rotation::Flip => {
+                    new_state.col += 1;
+                },
+            }
+        }
         new_state.apply_kicks(board, self.rotation);
         new_state
     }
@@ -129,6 +163,27 @@ impl SearchState {
             Rotation::Ccw => Rotation::Cw,
             Rotation::Flip => Rotation::Normal,
         };
+        // Handle weird I rotations
+        if new_state.piece == Piece::I {
+            match new_state.rotation {
+                Rotation::Normal => {
+                    new_state.row -= 1;
+                    new_state.col -= 1;
+                },
+                Rotation::Cw => {
+                    new_state.row -= 1;
+                    new_state.col += 1;
+                },
+                Rotation::Ccw => {
+                    new_state.row += 1;
+                    new_state.col -= 1;
+                },
+                Rotation::Flip => {
+                    new_state.row += 1;
+                    new_state.col += 1;
+                },
+            }
+        }
         new_state.apply_kicks(board, self.rotation);
         new_state
     }
@@ -136,8 +191,8 @@ impl SearchState {
     fn apply_kicks(&mut self, board: &Board, old_rot: Rotation) {
         let original = self.clone();
         for &(kick_row, kick_col) in self.piece.kick_map(old_rot, self.rotation).iter() {
-            self.row += kick_row;
-            self.col += kick_col;
+            self.row = original.row + kick_row;
+            self.col = original.col + kick_col;
             if self.intersects(board) {
                 continue;
             }

@@ -48,14 +48,25 @@ pub fn get_locations(board: &Board, piece: Piece) -> HashMap<SearchState, Vec<Mo
 }
 
 // Returns minimum number of moves for a certain placement
-pub fn get_finesse_faults(board: &Board, piece: Piece, moves: u8, row: u8, col: u8, rotation: Rotation) -> u8 {
+pub fn get_finesse_faults(
+    board: &Board,
+    piece: Piece,
+    moves: u8,
+    row: u8,
+    col: u8,
+    rotation: Rotation,
+) -> (u8, Option<Vec<Movement>>) {
     let location_map = get_locations(board, piece);
     let target_state = SearchState::new(row as i8, col as i8, rotation, piece);
     match location_map.get(&target_state) {
         Some(path) => {
-            println!("{:?}", path);
-            (moves as i8 - path.len() as i8).max(0) as u8
+            let num_faults = (moves as i8 - path.len() as i8).max(0) as u8;
+            (num_faults, if num_faults > 0 {
+                Some(path.to_vec())
+            } else {
+                None
+            })
         },
-        None => 0,
+        None => (0, None),
     }
 }
