@@ -1,8 +1,9 @@
 use macroquad::prelude::*;
 use crate::util::window::*;
 use crate::state::Tile;
+use super::{Piece, Rotation};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Board {
     pub tiles: [[Tile; 10]; 23],
 }
@@ -59,5 +60,15 @@ impl Board {
                 },
             );
         }
+    }
+
+    pub fn with_placement(&self, piece: Piece, row: u8, col: u8, rotation: Rotation) -> Self {
+        let mut new_board = *self;
+        for &(offset_row, offset_col) in piece.offset_map(rotation).iter() {
+            let r = row as i8 + offset_row;
+            let c = col as i8 + offset_col;
+            new_board.tiles[r as usize][c as usize] = Tile::from(piece);
+        }
+        new_board
     }
 }

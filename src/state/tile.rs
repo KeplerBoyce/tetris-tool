@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use crate::state::Piece;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Tile {
     pub piece: Option<Piece>,
 }

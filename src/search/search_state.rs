@@ -3,10 +3,10 @@ use super::Movement;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SearchState {
-    row: i8,
-    col: i8,
-    rotation: Rotation,
-    piece: Piece,
+    pub row: i8,
+    pub col: i8,
+    pub rotation: Rotation,
+    pub piece: Piece,
 }
 
 impl SearchState {

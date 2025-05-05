@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap, VecDeque};
-use crate::state::{Board, Piece, Rotation};
-use super::{Movement, SearchState};
+use crate::state::{Board, Game, Piece, Rotation};
+use super::{Movement, Pc, PcState, SearchState};
 
 // Returns a map of all possible final locations to the number of moves they take
 pub fn get_locations(board: &Board, piece: Piece) -> HashMap<SearchState, Vec<Movement>> {
@@ -70,4 +70,26 @@ pub fn get_finesse_faults(
         },
         None => (0, None),
     }
+}
+
+// Returns vec of all 4L PC solves from current position and queue
+pub fn find_4l_pcs(game: &Game) -> Vec<Pc> {
+    let mut solves: Vec<Pc> = Vec::new();
+    let mut q: VecDeque<PcState> = VecDeque::from(vec![PcState::from(game)]);
+    let mut visited: HashSet<PcState> = HashSet::new();
+
+    while let Some(state) = q.pop_front() {
+        if visited.contains(&state) {
+            continue;
+        }
+        visited.insert(state.clone());
+
+        for successor in state.successors().iter() {
+            if visited.contains(successor) {
+                continue;
+            }
+            q.push_back(successor.clone());
+        }
+    }
+    solves
 }
