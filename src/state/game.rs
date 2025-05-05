@@ -27,6 +27,8 @@ pub struct Game {
     pub undo_stack: Vec<(Board, Option<Piece>, Stats)>,
     pub prev_stats: Stats,
     pub finesse_path: Option<Vec<Movement>>,
+    pub my_path: Vec<Movement>,
+    pub prev_path: Vec<Movement>,
 }
 
 impl Game {
@@ -50,6 +52,8 @@ impl Game {
             undo_stack: Vec::new(),
             prev_stats: Stats::new(),
             finesse_path: None,
+            my_path: Vec::new(),
+            prev_path: Vec::new(),
         };
         init_queue(&mut game);
         game
@@ -172,8 +176,10 @@ impl Game {
 
     fn draw_finesse_path(&self, x: f32, y: f32, font: Font) {
         if let Some(path) = &self.finesse_path {
+            draw_text_ex(&format!("{:?}", self.prev_path), x + margin(),
+                    y + text_size_normal() + margin(), text_normal(font, Color::new(1.0, 0.5, 0.5, 1.0)));
             draw_text_ex(&format!("{:?}", path), x + margin(),
-                    y + tile_size(), text_normal(font, Color::new(1.0, 0.5, 0.5, 1.0)));
+                    y + 2.0 * text_size_normal() + margin(), text_normal(font, Color::new(0.5, 1.0, 0.5, 1.0)));
         }
     }
 
@@ -236,15 +242,20 @@ impl Game {
     }
 
     pub fn place_piece(&mut self, stats: &mut Stats) {
-        let moves = stats.inputs - self.prev_stats.inputs;
+        // Calculate optimal finesse and number of faults
+        self.prev_path = self.my_path.clone();
+        self.my_path = Vec::new();
+        let moves = self.prev_path.len();
         if let Some(piece) = self.piece {
             let (num_faults, path) = get_finesse_faults(&self.board, piece, moves as u8, self.piece_row as u8, self.piece_col as u8, self.rotation);
             stats.faults += num_faults as u32;
             self.finesse_path = path;
         }
         stats.pieces += 1;
+        // Saving stuff on undo stack
         self.undo_stack.push((self.board, self.piece, self.prev_stats));
         self.prev_stats = *stats;
+        // Actually placing the piece on the board
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
                 let row = (self.piece_row + offset_row) as usize;

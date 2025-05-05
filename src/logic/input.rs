@@ -1,6 +1,7 @@
 use std::time::Instant;
 use macroquad::prelude::*;
 use crate::state::{Game, Piece, Rotation};
+use crate::search::Movement;
 use super::{Config, Stats};
 
 fn apply_cw(game: &mut Game) {
@@ -139,6 +140,8 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
             game.rotation = Rotation::Normal;
             game.prev_stats = old_stats;
             *stats = old_stats;
+            // Reset finesse path
+            game.my_path = Vec::new();
         }
     }
 
@@ -146,6 +149,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
 
     if is_key_pressed(config.left) {
         stats.inputs += 1;
+        game.my_path.push(Movement::Left);
         game.left_time = now;
         game.left_priority = true;
         game.piece_col -= 1;
@@ -157,6 +161,9 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
     if is_key_down(config.left) {
         if now.duration_since(game.left_time).as_millis() as u32 >= config.das {
             game.left_das_activated = true;
+            if let Some(last) = game.my_path.last_mut() {
+                *last = Movement::DasLeft;
+            }
         }
         // If left is more recently held than right and has been held long enough
         if game.left_priority && game.left_das_activated &&
@@ -187,6 +194,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
 
     if is_key_pressed(config.right) {
         stats.inputs += 1;
+        game.my_path.push(Movement::Right);
         game.right_time = now;
         game.left_priority = false;
         game.piece_col += 1;
@@ -198,6 +206,9 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
     if is_key_down(config.right) {
         if now.duration_since(game.right_time).as_millis() as u32 >= config.das {
             game.right_das_activated = true;
+            if let Some(last) = game.my_path.last_mut() {
+                *last = Movement::DasRight;
+            }
         }
         // If right is more recently held than left and has been held long enough
         if !game.left_priority && game.right_das_activated &&
@@ -228,6 +239,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
 
     if is_key_pressed(config.soft_drop) {
         stats.inputs += 1;
+        game.my_path.push(Movement::SoftDrop);
         game.soft_drop_time = now;
     }
     // Handle soft drop repetition
@@ -272,6 +284,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
 
     if is_key_pressed(config.hard_drop) {
         stats.inputs += 1;
+        game.my_path.push(Movement::HardDrop);
         loop {
             game.piece_row += 1;
             if game.check_landing() {
@@ -284,6 +297,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
 
     if is_key_pressed(config.rotate_cw) {
         stats.inputs += 1;
+        game.my_path.push(Movement::RotateCw);
         let old_rot = game.rotation;
         apply_cw(game);
         if !attempt_kicks(game, old_rot) {
@@ -298,6 +312,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
     }
     if is_key_pressed(config.rotate_ccw) {
         stats.inputs += 1;
+        game.my_path.push(Movement::RotateCcw);
         let old_rot = game.rotation;
         apply_ccw(game);
         if !attempt_kicks(game, old_rot) {
@@ -312,6 +327,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
     }
     if is_key_pressed(config.rotate_180) {
         stats.inputs += 1;
+        game.my_path.push(Movement::Rotate180);
         let old_rot = game.rotation;
         apply_180(game);
         if !attempt_kicks(game, old_rot) {
@@ -332,5 +348,7 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
         game.piece_row = 1;
         game.piece_col = 4;
         game.rotation = Rotation::Normal;
+        // Clear path -- resets when you hold to avoid extra faults
+        game.my_path = Vec::new();
     }
 }
