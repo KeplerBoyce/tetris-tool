@@ -114,10 +114,12 @@ pub fn find_pcs(game: &Game) -> Vec<Pc> {
     let mut stack: Vec<PcState> = vec![initial_state];
     let mut visited: HashSet<PcState> = HashSet::new();
     let queue = Vec::from(game.queue.clone());
+    let mut i = 0;
 
     while let Some(state) = stack.pop() {
-        if visited.len() % 10000 == 0 {
-            println!("{}", visited.len());
+        i += 1;
+        if i % 10000 == 0 {
+            println!("{}", i);
         }
         if visited.contains(&state) {
             continue;
