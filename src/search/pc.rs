@@ -1,7 +1,7 @@
 use crate::state::Board;
 use super::PcState;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Pc {
     board: Board,
 }

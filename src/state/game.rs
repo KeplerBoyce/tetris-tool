@@ -1,13 +1,17 @@
+use crossbeam_channel::{Receiver, Sender};
 use macroquad::prelude::*;
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Instant;
-use crate::search::{find_pcs, get_finesse_faults, Movement};
+use crate::search::{find_pcs, get_finesse_faults, Movement, Pc};
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
 use crate::util::font::*;
 use crate::util::window::*;
 use super::{Board, Tile};
 
+#[derive(Clone)]
 pub struct Game {
     pub board: Board,
     pub piece: Option<Piece>,
@@ -29,6 +33,7 @@ pub struct Game {
     pub finesse_path: Option<Vec<Movement>>,
     pub my_path: Vec<Movement>,
     pub prev_path: Vec<Movement>,
+    pub pcs: Vec<Pc>,
 }
 
 impl Game {
@@ -54,6 +59,7 @@ impl Game {
             finesse_path: None,
             my_path: Vec::new(),
             prev_path: Vec::new(),
+            pcs: Vec::new(),
         };
         init_queue(&mut game);
         game
@@ -297,15 +303,30 @@ impl Game {
         }
     }
 
-    pub fn step(&mut self, config: &Config, stats: &mut Stats, waiting: bool) {
+    pub async fn step(
+        &mut self,
+        config: &Config,
+        stats: &mut Stats,
+        waiting: bool,
+        cancel_flag: &mut Option<Arc<AtomicBool>>,
+        rx: &Receiver<Vec<Pc>>,
+        tx: &Sender<Vec<Pc>>,
+    ) {
         if self.piece.is_none() {
             get_next_piece(self);
             self.piece_row = 1;
             self.piece_col = 4;
             self.refresh_last_time();
-            // Check for PC solutions
-            let pcs = find_pcs(self);
-            println!("{:?}", pcs);
+            // Cancel previous solver if it's still running and run new solver
+            if let Some(flag) = cancel_flag.take() {
+                flag.store(true, Ordering::Relaxed);
+            }
+            *cancel_flag = Some(find_pcs(self.clone(), tx.clone()));
+        }
+        // Check if PC solutions have come in from the other thread
+        if let Ok(result) = rx.try_recv() {
+            self.pcs = result;
+            println!("{:?}", self.pcs);
         }
         handle_input(config, stats, self, waiting);
         self.apply_gravity(config, stats);

@@ -1,4 +1,8 @@
-use std::collections::{HashSet, HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
+use crossbeam_channel::Sender;
 use crate::state::{Board, Game, Piece, Rotation};
 use super::{Movement, Pc, PcState, SearchState};
 
@@ -102,24 +106,36 @@ pub fn get_finesse_faults(
     }
 }
 
+pub fn find_pcs(game: Game, tx: Sender<Vec<Pc>>) -> Arc<AtomicBool> {
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    let cloned_flag = cancel_flag.clone();
+
+    thread::spawn(move || {
+        if let Some(pcs) = find_pcs_helper(&game, cloned_flag) {
+            tx.send(pcs).unwrap();
+        } else {
+            return;
+        }
+    });
+    cancel_flag
+}
+
 // Returns vec of all PC solves it can find from current position and queue
-pub fn find_pcs(game: &Game) -> Vec<Pc> {
+fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>> {
     // First, check if we should even search at all
     let initial_state = PcState::from(game, 4);
     if initial_state.fails_early(&Vec::from(game.queue.clone())) {
-        return Vec::new();
+        return Some(Vec::new());
     }
 
     let mut solves: Vec<Pc> = Vec::new();
     let mut stack: Vec<PcState> = vec![initial_state];
     let mut visited: HashSet<PcState> = HashSet::new();
     let queue = Vec::from(game.queue.clone());
-    let mut i = 0;
 
     while let Some(state) = stack.pop() {
-        i += 1;
-        if i % 10000 == 0 {
-            println!("{}", i);
+        if cancel_flag.load(Ordering::Relaxed) {
+            return None;
         }
         if visited.contains(&state) {
             continue;
@@ -138,5 +154,5 @@ pub fn find_pcs(game: &Game) -> Vec<Pc> {
             stack.push(successor);
         }
     }
-    solves
+    Some(solves)
 }
