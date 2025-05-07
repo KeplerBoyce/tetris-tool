@@ -1,6 +1,6 @@
 use crossbeam_channel::{Receiver, Sender};
 use macroquad::prelude::*;
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -196,7 +196,7 @@ impl Game {
         draw_text_ex("PCs", x + margin(), y + tile_size(), text_large(font, WHITE));
         let mut height = text_size_large() + 2.0 * margin();
         for pc in self.pcs.iter() {
-            let pc_height = pc.draw(&self.board, x, y + height, scale);
+            let pc_height = pc.draw(x, y + height, scale);
             height += pc_height + margin();
             let sequence_height = pc.draw_sequence(x, y + height, scale * 0.25);
             height += sequence_height + margin();
@@ -319,7 +319,9 @@ impl Game {
         }
         // Check if PC solutions have come in from the other thread
         if let Ok(result) = rx.try_recv() {
-            self.pcs = result;
+            // Removing duplicate solutions (different sequence but same solve)
+            let pc_set: HashSet<Pc> = result.into_iter().collect();
+            self.pcs = pc_set.into_iter().collect();
         }
         handle_input(config, stats, self, waiting, cancel_flag, tx);
         self.apply_gravity(config, stats);

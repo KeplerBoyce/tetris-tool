@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use macroquad::prelude::*;
 use crate::util::window::*;
 use crate::state::{Board, Piece};
@@ -5,21 +6,22 @@ use super::Placement;
 
 #[derive(Clone, Debug)]
 pub struct Pc {
+    board: Board,
     placements: Vec<Placement>,
 }
 
 impl Pc {
-    pub fn new(placements: Vec<Placement>) -> Self {
+    pub fn new(board: Board, placements: Vec<Placement>) -> Self {
         Self {
+            board,
             placements,
         }
     }
 
-    // Returns the total height of the drawn PC
-    pub fn draw(&self, board: &Board, x: f32, y: f32, scale: f32) -> f32 {
+    fn get_final_board(&self) -> (Board, usize) {
         // Create a board containing all pieces in the PC
         let mut final_board = Board::new();
-        let mut temp_board = *board;
+        let mut temp_board = self.board;
         // Used for keeping track of which rows in final_board the temp_board rows correspond to
         let mut line_stack: Vec<usize> = (0..23).collect();
         let mut cleared = 0;
@@ -46,6 +48,12 @@ impl Pc {
                 temp_board.clear_lines();
             }
         }
+        (final_board, cleared)
+    }
+
+    // Returns the total height of the drawn PC
+    pub fn draw(&self, x: f32, y: f32, scale: f32) -> f32 {
+        let (final_board, cleared) = self.get_final_board();
         // Draw the board
         for r in (23 - cleared)..23 {
             for c in 0..10 {
@@ -110,5 +118,20 @@ impl Pc {
             }
         }
         2.0 * tile
+    }
+}
+
+// Custom PartialEq and Hash implementations for avoiding duplicate PC solves
+impl PartialEq for Pc {
+    fn eq(&self, other: &Self) -> bool {
+        self.get_final_board() == other.get_final_board()
+    }
+}
+
+impl Eq for Pc {}
+
+impl Hash for Pc {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.get_final_board().hash(state);
     }
 }

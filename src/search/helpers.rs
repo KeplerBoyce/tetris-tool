@@ -176,7 +176,7 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
                     break;
                 }
             }
-            solves.push(Pc::new(Vec::from(path)));
+            solves.push(Pc::new(game.board, Vec::from(path)));
         }
 
         for &(successor, placement) in state.successors(&queue).iter() {
