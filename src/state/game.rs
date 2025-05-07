@@ -75,6 +75,7 @@ impl Game {
         self.draw_piece_num(piece_num_x(), piece_num_y(), font, stats);
         self.board.draw_grid(board_x(), board_y());
         self.draw_finesse_path(finesse_x(), finesse_y(), font);
+        self.draw_pcs(pc_x(), pc_y(), 0.5, font);
         Game::draw_borders();
     }
 
@@ -101,6 +102,8 @@ impl Game {
         draw_outline(piece_num_x(), piece_num_y(), piece_num_width(), piece_num_height(), grid_thickness(), WHITE);
         // Finesse error text outline
         draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
+        // PC solver outline
+        draw_outline(pc_x(), pc_y(), pc_width(), pc_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -189,6 +192,15 @@ impl Game {
         }
     }
 
+    fn draw_pcs(&self, x: f32, y: f32, scale: f32, font: Font) {
+        draw_text_ex("PCs", x + margin(), y + tile_size(), text_large(font, WHITE));
+        let mut height = text_size_large() + 2.0 * margin();
+        for pc in self.pcs.iter() {
+            let pc_height = pc.draw(&self.board, x, y + height, scale);
+            height += pc_height + margin();
+        }
+    }
+
     pub fn refresh_last_time(&mut self) {
         self.last_time = Instant::now();
     }
@@ -272,38 +284,22 @@ impl Game {
                 self.rotation = Rotation::Normal;
             }
         }
-        // Handle clearing lines
-        let mut cleared = [false; 23];
-        'row: for r in 0..23 {
-            for c in 0..10 {
-                if self.board.tiles[r][c].piece.is_none() {
-                    continue 'row;
-                }
-            }
-            // If we're here, this means that the row was completely full -- mark it to clear
-            cleared[r] = true;
-            stats.lines += 1;
-        }
-        // Shift rows downwards to remove cleared lines
-        let mut offset = 0;
-        for r in (0..23).rev() {
-            if cleared[r] {
-                offset += 1;
-                continue;
-            }
-            for c in 0..10 {
-                self.board.tiles[r + offset][c] = self.board.tiles[r][c]
-            }
-        }
-        // Finally, make sure to erase the top lines that didn't get overwritten by shift
-        for r in 0..offset {
-            for c in 0..10 {
-                self.board.tiles[r + 3][c].piece = None;
-            }
-        }
+        stats.lines += self.board.clear_lines() as u32;
     }
 
-    pub async fn step(
+    pub fn refresh_pcs(
+        &self,
+        cancel_flag: &mut Option<Arc<AtomicBool>>,
+        tx: &Sender<Vec<Pc>>,
+    ) {
+        // Cancel previous solver if it's still running and run new solver
+        if let Some(flag) = cancel_flag.take() {
+            flag.store(true, Ordering::Relaxed);
+        }
+        *cancel_flag = Some(find_pcs(self.clone(), tx.clone()));
+    }
+
+    pub fn step(
         &mut self,
         config: &Config,
         stats: &mut Stats,
@@ -317,18 +313,13 @@ impl Game {
             self.piece_row = 1;
             self.piece_col = 4;
             self.refresh_last_time();
-            // Cancel previous solver if it's still running and run new solver
-            if let Some(flag) = cancel_flag.take() {
-                flag.store(true, Ordering::Relaxed);
-            }
-            *cancel_flag = Some(find_pcs(self.clone(), tx.clone()));
+            self.refresh_pcs(cancel_flag, tx);
         }
         // Check if PC solutions have come in from the other thread
         if let Ok(result) = rx.try_recv() {
             self.pcs = result;
-            println!("{:?}", self.pcs);
         }
-        handle_input(config, stats, self, waiting);
+        handle_input(config, stats, self, waiting, cancel_flag, tx);
         self.apply_gravity(config, stats);
     }
 }

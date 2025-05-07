@@ -1,7 +1,10 @@
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 use std::time::Instant;
+use crossbeam_channel::Sender;
 use macroquad::prelude::*;
 use crate::state::{Game, Piece, Rotation};
-use crate::search::Movement;
+use crate::search::{Movement, Pc};
 use super::{Config, Stats};
 
 fn apply_cw(game: &mut Game) {
@@ -115,7 +118,14 @@ fn attempt_kicks(game: &mut Game, old_rot: Rotation) -> bool {
     return false;
 }
 
-pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting: bool) {
+pub fn handle_input(
+    config: &Config,
+    stats: &mut Stats,
+    game: &mut Game,
+    waiting: bool,
+    cancel_flag: &mut Option<Arc<AtomicBool>>,
+    tx: &Sender<Vec<Pc>>,
+) {
     // If we are waiting for a keybind input, don't move in the game
     if waiting {
         return;
@@ -142,6 +152,8 @@ pub fn handle_input(config: &Config, stats: &mut Stats, game: &mut Game, waiting
             *stats = old_stats;
             // Reset finesse path
             game.my_path = Vec::new();
+            // Refresh PC solutions
+            game.refresh_pcs(cancel_flag, tx);
         }
     }
 

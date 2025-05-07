@@ -1,6 +1,6 @@
 use std::collections::{hash_map::Entry, HashMap};
 use crate::state::{Board, Game, Piece};
-use super::{get_locations, Dsu};
+use super::{get_locations, Dsu, Placement};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct PcState {
@@ -123,52 +123,59 @@ impl PcState {
         return false;
     }
 
-    pub fn successors(&self, queue: &Vec<Piece>) -> Vec<Self> {
+    pub fn successors(&self, queue: &Vec<Piece>) -> Vec<(Self, Placement)> {
         let locations;
         if let Some(piece) = self.piece {
             locations = get_locations(&self.board, piece);
         } else {
             return Vec::new();
         }
-        let mut successors: Vec<Self> = Vec::new();
+        let mut successors: Vec<(Self, Placement)> = Vec::new();
         
         // Add all possible next placements for this piece as successors
         for &successor in locations.iter() {
+            let mut new_board = self.board.with_placement(
+                successor.piece,
+                successor.row as u8,
+                successor.col as u8,
+                successor.rotation,
+            );
+            let num_cleared = new_board.clear_lines();
             let successor_state = Self {
-                board: self.board.with_placement(
-                    successor.piece,
-                    successor.row as u8,
-                    successor.col as u8,
-                    successor.rotation,
-                ),
+                board: new_board,
                 queue_used: self.queue_used + 1,
                 piece: queue.get(self.queue_used as usize).copied(),
                 hold: self.hold,
-                height: self.height,
+                height: self.height - num_cleared,
             };
             // If the successor will definitely fail, don't explore
             if successor_state.fails_early(queue) {
                 continue;
             }
-            successors.push(successor_state);
+            successors.push((successor_state, Placement::place(
+                successor.piece,
+                successor.row as u8,
+                successor.col as u8,
+                successor.rotation,
+            )));
         }
         // Adding state for swapping with hold piece
         if let Some(hold) = self.hold {
-            successors.push(Self {
+            successors.push((Self {
                 board: self.board,
                 queue_used: self.queue_used,
                 piece: Some(hold),
                 hold: self.piece,
                 height: self.height,
-            });
+            }, Placement::Hold));
         } else {
-            successors.push(Self {
+            successors.push((Self {
                 board: self.board,
                 queue_used: self.queue_used + 1,
                 piece: queue.get(self.queue_used as usize).copied(),
                 hold: self.piece,
                 height: self.height,
-            });
+            }, Placement::Hold));
         }
         successors
     }

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use crossbeam_channel::Sender;
 use crate::state::{Board, Game, Piece, Rotation};
-use super::{Movement, Pc, PcState, SearchState};
+use super::{Movement, Pc, PcState, Placement, SearchState};
 
 // Returns a set of all possible final locations
 pub fn get_locations(board: &Board, piece: Piece) -> HashSet<SearchState> {
@@ -123,17 +123,39 @@ pub fn find_pcs(game: Game, tx: Sender<Vec<Pc>>) -> Arc<AtomicBool> {
 // Returns vec of all PC solves it can find from current position and queue
 fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>> {
     // First, check if we should even search at all
-    let initial_state = PcState::from(game, 4);
-    if initial_state.fails_early(&Vec::from(game.queue.clone())) {
+    // Try height 1 through 4
+    let initial_state1 = PcState::from(game, 1);
+    let initial_state2 = PcState::from(game, 2);
+    let initial_state3 = PcState::from(game, 3);
+    let initial_state4 = PcState::from(game, 4);
+
+    let queue_clone = Vec::from(game.queue.clone());
+    if initial_state1.fails_early(&queue_clone)
+            && initial_state2.fails_early(&queue_clone)
+            && initial_state3.fails_early(&queue_clone)
+            && initial_state4.fails_early(&queue_clone) {
         return Some(Vec::new());
     }
 
     let mut solves: Vec<Pc> = Vec::new();
-    let mut stack: Vec<PcState> = vec![initial_state];
+    // Start search from all 4 height possiblities (consider up through 4L PC)
+    let mut stack: Vec<(PcState, usize)> = vec![
+        (initial_state1, 0),
+        (initial_state2, 1),
+        (initial_state3, 2),
+        (initial_state4, 3),
+    ];
     let mut visited: HashSet<PcState> = HashSet::new();
     let queue = Vec::from(game.queue.clone());
+    // Stores index of previous state in this vector for reconstructing path at the end
+    let mut prev_nodes: Vec<(Option<Placement>, usize)> = vec![
+        (None, 0),
+        (None, 0),
+        (None, 0),
+        (None, 0),
+    ];
 
-    while let Some(state) = stack.pop() {
+    while let Some((state, index)) = stack.pop() {
         if cancel_flag.load(Ordering::Relaxed) {
             return None;
         }
@@ -143,15 +165,26 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
         visited.insert(state);
 
         if state.is_solved() {
-            solves.push(Pc::from(&state));
-            println!("Found solve");
+            let mut path: VecDeque<Placement> = VecDeque::new();
+            let mut curr_index = index;
+            loop {
+                let (placement_option, prev_index) = prev_nodes[curr_index];
+                if let Some(placement) = placement_option {
+                    path.push_front(placement);
+                    curr_index = prev_index;
+                } else {
+                    break;
+                }
+            }
+            solves.push(Pc::new(Vec::from(path)));
         }
 
-        for &successor in state.successors(&queue).iter() {
+        for &(successor, placement) in state.successors(&queue).iter() {
             if visited.contains(&successor) {
                 continue;
             }
-            stack.push(successor);
+            prev_nodes.push((Some(placement), index));
+            stack.push((successor, prev_nodes.len() - 1));
         }
     }
     Some(solves)

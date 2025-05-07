@@ -60,12 +60,12 @@ pub fn tile_size() -> f32 {
 
 #[inline(always)]
 pub fn board_width() -> f32 {
-    ((width() / 2.0 - SCREEN_MARGIN).min(height() / 2.8 - SCREEN_MARGIN) as i32 / 10 * 10) as f32
+    ((width() / 3.0 - SCREEN_MARGIN).min(height() / 2.8 - SCREEN_MARGIN) as i32 / 10 * 10) as f32
 }
 
 #[inline(always)]
 pub fn board_x() -> f32 {
-    game_x() + width() / 2.0 - board_width() / 2.0
+    game_x() + (width() - pc_width()) / 2.0 - board_width() / 2.0
 }
 
 #[inline(always)]
@@ -176,4 +176,24 @@ pub fn finesse_width() -> f32 {
 #[inline(always)]
 pub fn finesse_height() -> f32 {
     board_height() * 3.0 / 23.0
+}
+
+#[inline(always)]
+pub fn pc_x() -> f32 {
+    queue_x() + queue_width() + board_gap()
+}
+
+#[inline(always)]
+pub fn pc_y() -> f32 {
+    queue_y()
+}
+
+#[inline(always)]
+pub fn pc_width() -> f32 {
+    board_width() / 2.0
+}
+
+#[inline(always)]
+pub fn pc_height() -> f32 {
+    board_height()
 }

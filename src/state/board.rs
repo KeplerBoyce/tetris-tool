@@ -72,6 +72,39 @@ impl Board {
         }
         new_board
     }
+
+    // Returns the number of lines cleared
+    pub fn clear_lines(&mut self) -> u8 {
+        // Handle clearing lines
+        let mut cleared = [false; 23];
+        'row: for r in 0..23 {
+            for c in 0..10 {
+                if self.tiles[r][c].piece.is_none() {
+                    continue 'row;
+                }
+            }
+            // If we're here, this means that the row was completely full -- mark it to clear
+            cleared[r] = true;
+        }
+        // Shift rows downwards to remove cleared lines
+        let mut offset = 0;
+        for r in (0..23).rev() {
+            if cleared[r] {
+                offset += 1;
+                continue;
+            }
+            for c in 0..10 {
+                self.tiles[r + offset][c] = self.tiles[r][c]
+            }
+        }
+        // Finally, make sure to erase the top lines that didn't get overwritten by shift
+        for r in 0..offset {
+            for c in 0..10 {
+                self.tiles[r + 3][c].piece = None;
+            }
+        }
+        return offset as u8;
+    }
 }
 
 impl Debug for Board {
