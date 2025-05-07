@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
-use crate::{state::Board, util::window::tile_size};
+use crate::util::window::*;
+use crate::state::{Board, Piece};
 use super::Placement;
 
 #[derive(Clone, Debug)]
@@ -58,5 +59,56 @@ impl Pc {
             }
         }
         cleared as f32 * tile_size() * scale
+    }
+
+    // Draws the order that the pieces are placed, returns height of drawing
+    pub fn draw_sequence(&self, x: f32, y: f32, scale: f32) -> f32 {
+        let tile = tile_size() * scale;
+        let margin = tile_size() * 0.25;
+        let mut width: f32 = margin;
+
+        for &placement in self.placements.iter() {
+            match placement {
+                Placement::Hold => {},
+                Placement::Place { piece, .. } => {
+                    match piece {
+                        Piece::I => {
+                            draw_rectangle(x + width, y + 0.5 * tile, 4.0 * tile, tile, Piece::I.color());
+                            width += 4.0 * tile + margin;
+                        },
+                        Piece::J => {
+                            draw_rectangle(x + width, y, tile, tile, Piece::J.color());
+                            draw_rectangle(x + width, y + tile, 3.0 * tile, tile, Piece::J.color());
+                            width += 3.0 * tile + margin;
+                        },
+                        Piece::L => {
+                            draw_rectangle(x + width + 2.0 * tile, y, tile, tile, Piece::L.color());
+                            draw_rectangle(x + width, y + tile, 3.0 * tile, tile, Piece::L.color());
+                            width += 3.0 * tile + margin;
+                        },
+                        Piece::O => {
+                            draw_rectangle(x + width, y, 2.0 * tile, 2.0 * tile, Piece::O.color());
+                            width += 2.0 * tile + margin;
+                        },
+                        Piece::S => {
+                            draw_rectangle(x + width + tile, y, 2.0 * tile, tile, Piece::S.color());
+                            draw_rectangle(x + width, y + tile, 2.0 * tile, tile, Piece::S.color());
+                            width += 3.0 * tile + margin;
+                        },
+                        Piece::T => {
+                            draw_rectangle(x + width + tile, y, tile, tile, Piece::T.color());
+                            draw_rectangle(x + width, y + tile, 3.0 * tile, tile, Piece::T.color());
+                            width += 3.0 * tile + margin;
+                        },
+                        Piece::Z => {
+                            draw_rectangle(x + width, y, 2.0 * tile, tile, Piece::Z.color());
+                            draw_rectangle(x + width + tile, y + tile, 2.0 * tile, tile, Piece::Z.color());
+                            width += 3.0 * tile + margin;
+                        },
+                    }
+                },
+            }
+        }
+        2.0 * tile
     }
 }

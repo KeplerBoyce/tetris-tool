@@ -198,6 +198,8 @@ impl Game {
         for pc in self.pcs.iter() {
             let pc_height = pc.draw(&self.board, x, y + height, scale);
             height += pc_height + margin();
+            let sequence_height = pc.draw_sequence(x, y + height, scale * 0.25);
+            height += sequence_height + margin();
         }
     }
 
