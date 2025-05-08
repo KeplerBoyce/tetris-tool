@@ -28,12 +28,13 @@ pub struct Game {
     pub left_das_activated: bool, // Becomes true when left key is held long enough for DAS
     pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
     pub left_priority: bool, // True when left is the most recently held key
-    pub undo_stack: Vec<(Board, Option<Piece>, Stats)>,
+    pub undo_stack: Vec<(Board, Option<Piece>, Option<Piece>, bool, Stats)>, // Board, piece, hold, held, stats
     pub prev_stats: Stats,
     pub finesse_path: Option<Vec<Movement>>,
     pub my_path: Vec<Movement>,
     pub prev_path: Vec<Movement>,
     pub pcs: Vec<Pc>,
+    pub held: bool,
 }
 
 impl Game {
@@ -60,6 +61,7 @@ impl Game {
             my_path: Vec::new(),
             prev_path: Vec::new(),
             pcs: Vec::new(),
+            held: false,
         };
         init_queue(&mut game);
         game
@@ -274,7 +276,7 @@ impl Game {
 
         stats.pieces += 1;
         // Saving stuff on undo stack
-        self.undo_stack.push((self.board, self.piece, self.prev_stats));
+        self.undo_stack.push((self.board, self.piece, self.hold, self.held, self.prev_stats));
         self.prev_stats = *stats;
         // Actually placing the piece on the board
         if let Some(piece) = self.piece {
@@ -287,6 +289,7 @@ impl Game {
             }
         }
         stats.lines += self.board.clear_lines() as u32;
+        self.held = false;
     }
 
     pub fn refresh_pcs(

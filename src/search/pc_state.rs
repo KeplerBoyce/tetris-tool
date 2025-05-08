@@ -70,57 +70,54 @@ impl PcState {
             return true;
         }
 
-        // Realized: this doesn't work due to some skims
-        // (e.g. creating a region that isn't a multiple of 4 but then skimming to fix it)
-
         // If any regions in the PC area have a number of squares that isn't a multiple of 4
-        // let mut dsu = Dsu::new(10 * self.height as usize);
-        // 
-        // for r in (23 - self.height)..23 {
-        //     for c in 0..10 {
-        //         if self.board.tiles[r as usize][c].piece.is_some() {
-        //             continue;
-        //         }
-        //         let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
-        //         // Check if open to left -- if so, can union
-        //         if c > 0 && self.board.tiles[r as usize][c - 1].piece.is_none() {
-        //             // idx-1 is the tile to the left
-        //             dsu.union(idx, idx - 1);
-        //         }
-        //         // Check if open above -- if so, can union
-        //         if r > 23 - self.height && self.board.tiles[r as usize - 1][c].piece.is_none() {
-        //             // idx-10 is the tile above
-        //             dsu.union(idx, idx - 10);
-        //         }
-        //     }
-        // }
-        // // Now, group regions of empty tiles together
-        // // This hashmap maps from region parent index to number of tiles in region
-        // let mut regions: HashMap<usize, u8> = HashMap::new();
-        //
-        // for r in (23 - self.height)..23 {
-        //     for c in 0..10 {
-        //         if self.board.tiles[r as usize][c].piece.is_some() {
-        //             continue;
-        //         }
-        //         let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
-        //         let parent = dsu.find(idx);
-        //         match regions.entry(parent) {
-        //             Entry::Occupied(mut entry) => {
-        //                 *entry.get_mut() += 1;
-        //             },
-        //             Entry::Vacant(entry) => {
-        //                 entry.insert(1);
-        //             },
-        //         }
-        //     }
-        // }
-        // // Finally, check if any regions have a size that isn't a multiple of 4 (unsolvable)
-        // for (_, region_size) in regions.iter() {
-        //     if region_size % 4 != 0 {
-        //         return true;
-        //     }
-        // }
+        let mut dsu = Dsu::new(10 * self.height as usize);
+        
+        for r in (23 - self.height)..23 {
+            for c in 0..10 {
+                if self.board.tiles[r as usize][c].piece.is_some() {
+                    continue;
+                }
+                let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
+                // Check if open to left -- if so, can union
+                if c > 0 && self.board.tiles[r as usize][c - 1].piece.is_none() {
+                    // idx-1 is the tile to the left
+                    dsu.union(idx, idx - 1);
+                }
+                // Check if open above -- if so, can union
+                if r > 23 - self.height && self.board.tiles[r as usize - 1][c].piece.is_none() {
+                    // idx-10 is the tile above
+                    dsu.union(idx, idx - 10);
+                }
+            }
+        }
+        // Now, group regions of empty tiles together
+        // This hashmap maps from region parent index to number of tiles in region
+        let mut regions: HashMap<usize, u8> = HashMap::new();
+
+        for r in (23 - self.height)..23 {
+            for c in 0..10 {
+                if self.board.tiles[r as usize][c].piece.is_some() {
+                    continue;
+                }
+                let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
+                let parent = dsu.find(idx);
+                match regions.entry(parent) {
+                    Entry::Occupied(mut entry) => {
+                        *entry.get_mut() += 1;
+                    },
+                    Entry::Vacant(entry) => {
+                        entry.insert(1);
+                    },
+                }
+            }
+        }
+        // Finally, check if any regions have a size that isn't a multiple of 4 (unsolvable)
+        for (_, region_size) in regions.iter() {
+            if region_size % 4 != 0 {
+                return true;
+            }
+        }
 
         // If none of these checks fail, we have to keep exploring this node
         return false;

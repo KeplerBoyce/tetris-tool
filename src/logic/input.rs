@@ -137,14 +137,18 @@ pub fn handle_input(
     }
 
     if is_key_pressed(config.undo) {
-        if let Some((board, piece, old_stats)) = game.undo_stack.pop() {
+        if let Some((board, piece, hold, held, old_stats)) = game.undo_stack.pop() {
             // Add current piece back into start of queue
-            if let Some(curr_piece) = game.piece {
-                game.queue.push_front(curr_piece);
+            if !game.held || hold.is_none() {
+                if let Some(curr_piece) = game.piece {
+                    game.queue.push_front(curr_piece);
+                }
             }
             // Restore previous board state and piece
             game.board = board;
             game.piece = piece;
+            game.hold = hold;
+            game.held = held;
             game.piece_row = 1;
             game.piece_col = 4;
             game.rotation = Rotation::Normal;
@@ -354,13 +358,17 @@ pub fn handle_input(
     }
 
     if is_key_pressed(config.hold) {
-        let piece = game.piece;
-        game.piece = game.hold;
-        game.hold = piece;
-        game.piece_row = 1;
-        game.piece_col = 4;
-        game.rotation = Rotation::Normal;
-        // Clear path -- resets when you hold to avoid extra faults
-        game.my_path = Vec::new();
+        if !game.held {
+            game.undo_stack.push((game.board, game.piece, game.hold, game.held, *stats));
+            let piece = game.piece;
+            game.piece = game.hold;
+            game.hold = piece;
+            game.piece_row = 1;
+            game.piece_col = 4;
+            game.rotation = Rotation::Normal;
+            // Clear path -- resets when you hold to avoid extra faults
+            game.my_path = Vec::new();
+            game.held = true;
+        }
     }
 }
