@@ -1,6 +1,5 @@
-use std::collections::{hash_map::Entry, HashMap};
 use crate::state::{Board, Game, Piece};
-use super::{get_locations, Dsu, Placement};
+use super::{get_locations, Placement};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct PcState {
@@ -70,53 +69,37 @@ impl PcState {
             return true;
         }
 
-        // If any regions in the PC area have a number of squares that isn't a multiple of 4
-        let mut dsu = Dsu::new(10 * self.height as usize);
-        
-        for r in (23 - self.height)..23 {
-            for c in 0..10 {
-                if self.board.tiles[r as usize][c].piece.is_some() {
-                    continue;
-                }
-                let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
-                // Check if open to left -- if so, can union
-                if c > 0 && self.board.tiles[r as usize][c - 1].piece.is_none() {
-                    // idx-1 is the tile to the left
-                    dsu.union(idx, idx - 1);
-                }
-                // Check if open above -- if so, can union
-                if r > 23 - self.height && self.board.tiles[r as usize - 1][c].piece.is_none() {
-                    // idx-10 is the tile above
-                    dsu.union(idx, idx - 10);
-                }
-            }
-        }
-        // Now, group regions of empty tiles together
-        // This hashmap maps from region parent index to number of tiles in region
-        let mut regions: HashMap<usize, u8> = HashMap::new();
+        // If there are any horizontally separated open regions that don't have a multiple of 4
+        // empty squares, it's unsolvable (skims can't save it)
+        let mut num_open = 0;
 
-        for r in (23 - self.height)..23 {
-            for c in 0..10 {
+        for c in 0..10 {
+            let mut walled_off = true;
+            let mut open_this_col = 0;
+
+            for r in (23 - self.height)..23 {
                 if self.board.tiles[r as usize][c].piece.is_some() {
                     continue;
                 }
-                let idx = 10 * (r as usize - (23 - self.height as usize)) + c;
-                let parent = dsu.find(idx);
-                match regions.entry(parent) {
-                    Entry::Occupied(mut entry) => {
-                        *entry.get_mut() += 1;
-                    },
-                    Entry::Vacant(entry) => {
-                        entry.insert(1);
-                    },
+                open_this_col += 1;
+                // If this tile is open and left tile is also open, then it isn't walled off
+                if c > 0 && self.board.tiles[r as usize][c - 1].piece.is_none() {
+                    walled_off = false;
                 }
             }
-        }
-        // Finally, check if any regions have a size that isn't a multiple of 4 (unsolvable)
-        for (_, region_size) in regions.iter() {
-            if region_size % 4 != 0 {
-                return true;
+            if walled_off {
+                // If we have walled off the left region and it doesn't have a multiple of 4 empty
+                // squares, then it's unsolvable
+                if num_open % 4 != 0 {
+                    return true;
+                }
+                num_open = 0;
             }
+            num_open += open_this_col;
+        }
+        // Also check again at the very end -- this last region doesn't get checked inside the loop
+        if num_open % 4 != 0 {
+            return true;
         }
 
         // If none of these checks fail, we have to keep exploring this node
