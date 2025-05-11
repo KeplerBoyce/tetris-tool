@@ -129,11 +129,14 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
     let initial_state3 = PcState::from(game, 3);
     let initial_state4 = PcState::from(game, 4);
 
-    let queue_clone = Vec::from(game.queue.clone());
-    if initial_state1.fails_early(&queue_clone)
-            && initial_state2.fails_early(&queue_clone)
-            && initial_state3.fails_early(&queue_clone)
-            && initial_state4.fails_early(&queue_clone) {
+    let mut queue = Vec::from(game.queue.clone());
+    while queue.len() > 5 {
+        queue.pop();
+    }
+    if initial_state1.fails_early(&queue)
+            && initial_state2.fails_early(&queue)
+            && initial_state3.fails_early(&queue)
+            && initial_state4.fails_early(&queue) {
         return Some(Vec::new());
     }
 
@@ -146,7 +149,6 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
         (initial_state4, 3),
     ];
     let mut visited: HashSet<PcState> = HashSet::new();
-    let queue = Vec::from(game.queue.clone());
     // Stores index of previous state in this vector for reconstructing path at the end
     let mut prev_nodes: Vec<(Option<Placement>, usize)> = vec![
         (None, 0),

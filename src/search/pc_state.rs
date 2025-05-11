@@ -39,7 +39,7 @@ impl PcState {
 
     // Returns true if this state will obviously fail to PC -- allows use of backtracking search to
     // cut down search time
-    pub fn fails_early(&self, queue: &Vec<Piece>) -> bool {
+    pub fn fails_early(&self, _queue: &Vec<Piece>) -> bool {
         // Counting number of minos on board
         let mut mino_count = 0;
 
@@ -60,7 +60,7 @@ impl PcState {
         }
 
         // If number of pieces placed + pieces in queue isn't enough minos
-        let minos_to_place = (queue.len() + 1 + if self.hold.is_some() {
+        let minos_to_place = (6 + if self.hold.is_some() {
             1
         } else {
             0
