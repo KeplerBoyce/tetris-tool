@@ -63,6 +63,17 @@ impl Board {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        for r in 3..23 {
+            for c in 0..10 {
+                if self.tiles[r][c].piece.is_some() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     pub fn with_placement(&self, piece: Piece, row: u8, col: u8, rotation: Rotation) -> Self {
         let mut new_board = *self;
         for &(offset_row, offset_col) in piece.offset_map(rotation).iter() {

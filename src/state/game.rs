@@ -28,13 +28,14 @@ pub struct Game {
     pub left_das_activated: bool, // Becomes true when left key is held long enough for DAS
     pub right_das_activated: bool, // Becomes true when right key is held long enough for DAS
     pub left_priority: bool, // True when left is the most recently held key
-    pub undo_stack: Vec<(Board, Option<Piece>, Option<Piece>, bool, Stats)>, // Board, piece, hold, held, stats
+    pub undo_stack: Vec<(Board, Option<Piece>, Option<Piece>, bool, Stats, u32)>, // Board, piece, hold, held, stats
     pub prev_stats: Stats,
     pub finesse_path: Option<Vec<Movement>>,
     pub my_path: Vec<Movement>,
     pub prev_path: Vec<Movement>,
     pub pcs: Vec<Pc>,
     pub held: bool,
+    pub pc_piece_num: u32,
 }
 
 impl Game {
@@ -62,6 +63,7 @@ impl Game {
             prev_path: Vec::new(),
             pcs: Vec::new(),
             held: false,
+            pc_piece_num: 0,
         };
         init_queue(&mut game);
         game
@@ -78,6 +80,7 @@ impl Game {
         self.board.draw_grid(board_x(), board_y());
         self.draw_finesse_path(finesse_x(), finesse_y(), font);
         self.draw_pcs(pc_x(), pc_y(), 0.5, font);
+        self.draw_strategy(strategy_x(), strategy_y(), font);
         Game::draw_borders();
     }
 
@@ -106,6 +109,8 @@ impl Game {
         draw_outline(finesse_x(), finesse_y(), finesse_width(), finesse_height(), grid_thickness(), WHITE);
         // PC solver outline
         draw_outline(pc_x(), pc_y(), pc_width(), pc_height(), grid_thickness(), WHITE);
+        // PC strategy outline
+        draw_outline(strategy_x(), strategy_y(), strategy_width(), strategy_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -205,6 +210,24 @@ impl Game {
         }
     }
 
+    fn draw_strategy(&self, x: f32, y: f32, font: Font) {
+        // If no PC is available, don't draw strategy text
+        if !self.board.is_empty() && self.pcs.len() == 0 {
+            return;
+        }
+        let piece_num = self.pc_piece_num % 7 + 1;
+        draw_text_ex(match piece_num {
+            1 => "1st PC",
+            2 => "6th PC",
+            3 => "4th PC",
+            4 => "2nd PC",
+            5 => "7th PC",
+            6 => "5th PC",
+            7 => "3rd PC / DPC",
+            _ => "",
+        }, x + margin(), y + tile_size(), text_normal(font, WHITE));
+    }
+
     pub fn refresh_last_time(&mut self) {
         self.last_time = Instant::now();
     }
@@ -274,10 +297,10 @@ impl Game {
             self.finesse_path = path;
         }
 
-        stats.pieces += 1;
-        // Saving stuff on undo stack
-        self.undo_stack.push((self.board, self.piece, self.hold, self.held, self.prev_stats));
         self.prev_stats = *stats;
+        // Saving stuff on undo stack
+        self.undo_stack.push((self.board, self.piece, self.hold, self.held, self.prev_stats, self.pc_piece_num));
+        stats.pieces += 1;
         // Actually placing the piece on the board
         if let Some(piece) = self.piece {
             for &(offset_row, offset_col) in piece.offset_map(self.rotation).iter() {
@@ -290,6 +313,16 @@ impl Game {
         }
         stats.lines += self.board.clear_lines() as u32;
         self.held = false;
+        // If the board is clear now, update PC piece num
+        if self.board.is_empty() {
+            self.pc_piece_num = stats.pieces;
+        } else {
+            // Or, if we have cleared a multiple of 4 lines since the last PC -- e.g. on 1st PC recovery
+            let pc_lines_diff = stats.lines - self.pc_piece_num * 2 / 5;
+            if pc_lines_diff > 0 && pc_lines_diff % 4 == 0 {
+                self.pc_piece_num = stats.lines * 5 / 2;
+            }
+        }
     }
 
     pub fn refresh_pcs(

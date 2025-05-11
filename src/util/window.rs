@@ -195,5 +195,25 @@ pub fn pc_width() -> f32 {
 
 #[inline(always)]
 pub fn pc_height() -> f32 {
-    board_height()
+    board_height() + board_gap()
+}
+
+#[inline(always)]
+pub fn strategy_x() -> f32 {
+    pc_x()
+}
+
+#[inline(always)]
+pub fn strategy_y() -> f32 {
+    board_y()
+}
+
+#[inline(always)]
+pub fn strategy_width() -> f32 {
+    pc_width()
+}
+
+#[inline(always)]
+pub fn strategy_height() -> f32 {
+    piece_num_height()
 }

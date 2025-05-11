@@ -137,7 +137,7 @@ pub fn handle_input(
     }
 
     if is_key_pressed(config.undo) {
-        if let Some((board, piece, hold, held, old_stats)) = game.undo_stack.pop() {
+        if let Some((board, piece, hold, held, old_stats, pc_piece_num)) = game.undo_stack.pop() {
             // Add current piece back into start of queue
             if !game.held || hold.is_none() {
                 if let Some(curr_piece) = game.piece {
@@ -153,6 +153,7 @@ pub fn handle_input(
             game.piece_col = 4;
             game.rotation = Rotation::Normal;
             game.prev_stats = old_stats;
+            game.pc_piece_num = pc_piece_num;
             *stats = old_stats;
             // Reset finesse path
             game.my_path = Vec::new();
@@ -360,7 +361,7 @@ pub fn handle_input(
 
     if is_key_pressed(config.hold) {
         if !game.held {
-            game.undo_stack.push((game.board, game.piece, game.hold, game.held, *stats));
+            game.undo_stack.push((game.board, game.piece, game.hold, game.held, *stats, game.pc_piece_num));
             let piece = game.piece;
             game.piece = game.hold;
             game.hold = piece;
