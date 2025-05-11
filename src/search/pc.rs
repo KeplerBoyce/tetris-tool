@@ -18,6 +18,23 @@ impl Pc {
         }
     }
 
+    pub fn height(&self) -> u8 {
+        let mut mino_count = 0;
+        for r in 3..23 {
+            for c in 0..10 {
+                if self.board.tiles[r][c].piece.is_some() {
+                    mino_count += 1;
+                }
+            }
+        }
+        for &placement in self.placements.iter() {
+            if let Placement::Place{ .. } = placement {
+                mino_count += 4;
+            }
+        }
+        (mino_count / 10) as u8
+    }
+
     fn get_final_board(&self) -> (Board, usize) {
         // Create a board containing all pieces in the PC
         let mut final_board = Board::new();

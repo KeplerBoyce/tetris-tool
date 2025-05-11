@@ -79,7 +79,7 @@ impl Game {
         self.draw_piece_num(piece_num_x(), piece_num_y(), font, stats);
         self.board.draw_grid(board_x(), board_y());
         self.draw_finesse_path(finesse_x(), finesse_y(), font);
-        self.draw_pcs(pc_x(), pc_y(), 0.5, font);
+        self.draw_pcs(pc_x(), pc_y(), 0.5, font, stats);
         self.draw_strategy(strategy_x(), strategy_y(), font);
         Game::draw_borders();
     }
@@ -199,12 +199,28 @@ impl Game {
         }
     }
 
-    fn draw_pcs(&self, x: f32, y: f32, scale: f32, font: Font) {
+    fn draw_pcs(&self, x: f32, y: f32, scale: f32, font: Font, stats: &Stats) {
         draw_text_ex("PCs", x + margin(), y + tile_size(), text_large(font, WHITE));
         let mut height = text_size_large() + 2.0 * margin();
         for pc in self.pcs.iter() {
+            // Draw the PC strategy this will lead into afterwards
+            let next_pc_piece_num = ((stats.lines + pc.height() as u32) * 5 / 2) % 7 + 1;
+            height += text_size_small();
+            draw_text_ex(match next_pc_piece_num {
+                1 => "=> 1st PC",
+                2 => "=> 6th PC",
+                3 => "=> 4th PC",
+                4 => "=> 2nd PC",
+                5 => "=> 7th PC",
+                6 => "=> 5th PC",
+                7 => "=> 3rd PC / DPC",
+                _ => "",
+            }, x + margin(), y + height, text_small(font, WHITE));
+            height += margin();
+            // Draw the solution picture
             let pc_height = pc.draw(x, y + height, scale);
             height += pc_height + margin();
+            // Draw the order of piece placements
             let sequence_height = pc.draw_sequence(x, y + height, scale * 0.25);
             height += sequence_height + margin();
         }
