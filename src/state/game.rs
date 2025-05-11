@@ -202,7 +202,9 @@ impl Game {
     fn draw_pcs(&self, x: f32, y: f32, scale: f32, font: Font, stats: &Stats) {
         draw_text_ex("PCs", x + margin(), y + tile_size(), text_large(font, WHITE));
         let mut height = text_size_large() + 2.0 * margin();
-        for pc in self.pcs.iter() {
+        let mut sorted = self.pcs.clone();
+        sorted.sort_by_key(|pc| pc.height());
+        for pc in sorted.iter() {
             // Draw the PC strategy this will lead into afterwards
             let next_pc_piece_num = ((stats.lines + pc.height() as u32) * 5 / 2) % 7 + 1;
             height += text_size_small();
