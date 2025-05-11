@@ -57,6 +57,17 @@ impl Pc {
         // Draw the board
         for r in (23 - cleared)..23 {
             for c in 0..10 {
+                // If the piece has already been placed, draw as gray to make solution easier to read
+                if self.board.tiles[r][c].piece.is_some() {
+                    draw_rectangle(
+                        x + tile_size() * scale * c as f32,
+                        y + tile_size() * scale * (r - (23 - cleared)) as f32,
+                        tile_size() * scale,
+                        tile_size() * scale,
+                        GRAY,
+                    );
+                    continue;
+                }
                 draw_rectangle(
                     x + tile_size() * scale * c as f32,
                     y + tile_size() * scale * (r - (23 - cleared)) as f32,

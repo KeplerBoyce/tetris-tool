@@ -157,6 +157,7 @@ pub fn handle_input(
             // Reset finesse path
             game.my_path = Vec::new();
             // Refresh PC solutions
+            game.pcs = Vec::new();
             game.refresh_pcs(cancel_flag, tx);
         }
     }
