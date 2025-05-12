@@ -18,7 +18,54 @@ impl PcSetup {
         }
     }
 
-    pub fn can_build(&self, queue: VecDeque<Piece>, piece: Option<Piece>, hold: Option<Piece>) -> bool {
+    pub fn can_build(&mut self, board: &Board, queue: VecDeque<Piece>, piece: Option<Piece>, hold: Option<Piece>) -> bool {
+        // First, eliminate pieces that are already filled by the board
+        let mut minos_filled = 0;
+        let mut i = 0;
+
+        while i < self.placements.len() {
+            let placement = self.placements[i];
+
+            if let Placement::Place { piece, row, col, rotation } = placement {
+                let mut piece_minos_filled = 0;
+                for &(offset_row, offset_col) in piece.offset_map(rotation).iter() {
+                    let r = (row as i8 + offset_row) as usize;
+                    let c = (col as i8 + offset_col) as usize;
+                    if board.tiles[r][c].piece.is_some() {
+                        piece_minos_filled += 1;
+                    }
+                }
+                // If we successfully filled in the whole piece, remove it from placements
+                if piece_minos_filled == 4 {
+                    minos_filled += 4;
+                    self.placements.remove(i);
+                    // Bypass the i += 1 since we removed something
+                    continue;
+                } else if piece_minos_filled > 0 {
+                    // This means a piece was only partially filled, so we can't build
+                    return false;
+                }
+            }
+            i += 1;
+        }
+        // Check if we filled in all of the minos on the board -- if not, the board has junk that
+        // will prevent the setup from being buildable
+        let mut board_mino_count = 0;
+        for r in 3..23 {
+            for c in 0..10 {
+                if board.tiles[r][c].piece.is_some() {
+                    board_mino_count += 1;
+                }
+            }
+        }
+        if board_mino_count != minos_filled {
+            return false;
+        }
+        // If we have already built the whole thing, don't want to include this in setup list
+        if self.placements.len() == 0 {
+            return false;
+        }
+
         // First, check if our pieces even match the pieces used by the setup
         let mut setup_counts: HashMap<Piece, u8> = HashMap::new();
         let mut queue_counts: HashMap<Piece, u8> = HashMap::new();
@@ -59,7 +106,7 @@ impl PcSetup {
         // This stack contains all of the remaining placements that need to be made as well as the
         // current state of the queue, piece, and hold piece.
         let mut stack: Vec<SetupState> = vec![
-            SetupState::new(Board::new(), self.placements.clone(), queue.clone(), piece, hold),
+            SetupState::new(*board, self.placements.clone(), queue.clone(), piece, hold),
         ];
         let mut visited: HashSet<SetupState> = HashSet::new();
 
@@ -111,13 +158,24 @@ impl PcSetup {
         for r in start_row..23 {
             for c in 0..10 {
                 if let Some(piece) = final_board.tiles[r][c].piece {
-                    draw_rectangle(
-                        x + tile_size() * scale * c as f32,
-                        y + tile_size() * scale * (r - start_row) as f32,
-                        tile_size() * scale,
-                        tile_size() * scale,
-                        piece.color(),
-                    );
+                    // If the mino was already there in the original board, draw in gray
+                    if let Some(_) = board.tiles[r][c].piece {
+                        draw_rectangle(
+                            x + tile_size() * scale * c as f32,
+                            y + tile_size() * scale * (r - start_row) as f32,
+                            tile_size() * scale,
+                            tile_size() * scale,
+                            GRAY,
+                        );
+                    } else {
+                        draw_rectangle(
+                            x + tile_size() * scale * c as f32,
+                            y + tile_size() * scale * (r - start_row) as f32,
+                            tile_size() * scale,
+                            tile_size() * scale,
+                            piece.color(),
+                        );
+                    }
                 }
             }
         }

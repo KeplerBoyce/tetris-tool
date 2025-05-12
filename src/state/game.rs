@@ -81,7 +81,7 @@ impl Game {
         self.draw_finesse_path(finesse_x(), finesse_y(), font);
         self.draw_pcs(pc_x(), pc_y(), 0.5, font, stats);
         self.draw_strategy(strategy_x(), strategy_y(), font);
-        self.draw_setups(setup_x(), setup_y(), 0.5, font);
+        self.draw_setups(setup_x(), setup_y(), 0.5, font, stats);
         Game::draw_borders();
     }
 
@@ -233,11 +233,11 @@ impl Game {
         }
     }
 
-    fn draw_setups(&mut self, x: f32, y: f32, scale: f32, font: Font) {
+    fn draw_setups(&mut self, x: f32, y: f32, scale: f32, font: Font, stats: &Stats) {
         draw_text_ex("SETUPS", x + margin(), y + tile_size(), text_large(font, WHITE));
         let mut height = text_size_large() + 2.0 * margin();
 
-        for setup in find_setups(self).iter() {
+        for setup in find_setups(self, stats).iter() {
             // Draw the setup build picture
             let setup_height = setup.draw(&self.board, x, y + height, scale);
             height += setup_height + margin();
