@@ -3,6 +3,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use crossbeam_channel::Sender;
+use crate::logic::gen_bag;
+use crate::setups::{PcSetup, FIRST_PCS};
 use crate::state::{Board, Game, Piece, Rotation};
 use super::{Movement, Pc, PcState, Placement, SearchState};
 
@@ -190,4 +192,37 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
         }
     }
     Some(solves)
+}
+
+pub fn find_setups(game: &mut Game) -> Vec<PcSetup> {
+    // For now, only display setups on empty board
+    if !game.board.is_empty() {
+        return Vec::new();
+    }
+    let mut setups: Vec<PcSetup> = Vec::new();
+    let piece_num = game.pc_piece_num % 7 + 1;
+    match piece_num {
+        1 => {
+            // Since we have 6/7 pieces from the bag, we can tell what the last one is
+            let mut full_queue = game.queue.clone();
+            if game.bag.len() == 0 {
+                gen_bag(game);
+            }
+            full_queue.push_back(*game.bag.front().unwrap());
+
+            for setup in FIRST_PCS.iter() {
+                if setup.can_build(full_queue.clone(), game.piece, game.hold) {
+                    setups.push(setup.clone());
+                }
+            }
+        },
+        2 => {},
+        3 => {},
+        4 => {},
+        5 => {},
+        6 => {},
+        7 => {},
+        _ => {},
+    }
+    setups
 }

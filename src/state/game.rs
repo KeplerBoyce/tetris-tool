@@ -4,7 +4,7 @@ use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
-use crate::search::{find_pcs, get_finesse_faults, Movement, Pc};
+use crate::search::{find_pcs, find_setups, get_finesse_faults, Movement, Pc};
 use crate::state::{Piece, Rotation};
 use crate::logic::*;
 use crate::util::font::*;
@@ -81,6 +81,7 @@ impl Game {
         self.draw_finesse_path(finesse_x(), finesse_y(), font);
         self.draw_pcs(pc_x(), pc_y(), 0.5, font, stats);
         self.draw_strategy(strategy_x(), strategy_y(), font);
+        self.draw_setups(setup_x(), setup_y(), 0.5, font);
         Game::draw_borders();
     }
 
@@ -111,6 +112,8 @@ impl Game {
         draw_outline(pc_x(), pc_y(), pc_width(), pc_height(), grid_thickness(), WHITE);
         // PC strategy outline
         draw_outline(strategy_x(), strategy_y(), strategy_width(), strategy_height(), grid_thickness(), WHITE);
+        // Setups outline
+        draw_outline(setup_x(), setup_y(), setup_width(), setup_height(), grid_thickness(), WHITE);
     }
 
     fn draw_queue(&self, x: f32, y: f32, scale: f32, font: Font) {
@@ -202,8 +205,10 @@ impl Game {
     fn draw_pcs(&self, x: f32, y: f32, scale: f32, font: Font, stats: &Stats) {
         draw_text_ex("PCs", x + margin(), y + tile_size(), text_large(font, WHITE));
         let mut height = text_size_large() + 2.0 * margin();
+
         let mut sorted = self.pcs.clone();
         sorted.sort_by_key(|pc| pc.height());
+
         for pc in sorted.iter() {
             // Draw the PC strategy this will lead into afterwards
             let next_pc_piece_num = ((stats.lines + pc.height() as u32) * 5 / 2) % 7 + 1;
@@ -225,6 +230,17 @@ impl Game {
             // Draw the order of piece placements
             let sequence_height = pc.draw_sequence(x, y + height, scale * 0.25);
             height += sequence_height + margin();
+        }
+    }
+
+    fn draw_setups(&mut self, x: f32, y: f32, scale: f32, font: Font) {
+        draw_text_ex("SETUPS", x + margin(), y + tile_size(), text_large(font, WHITE));
+        let mut height = text_size_large() + 2.0 * margin();
+
+        for setup in find_setups(self).iter() {
+            // Draw the setup build picture
+            let setup_height = setup.draw(&self.board, x, y + height, scale);
+            height += setup_height + margin();
         }
     }
 
