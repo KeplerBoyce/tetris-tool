@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use crossbeam_channel::Sender;
 use crate::logic::{gen_bag, Stats};
-use crate::setups::{PcSetup, FIRST_PCS};
+use crate::setups::{PcSetup, FIRST_PCS, SECOND_PCS};
 use crate::state::{Board, Game, Piece, Rotation};
 use super::{Movement, Pc, PcState, Placement, SearchState};
 
@@ -194,26 +194,49 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
     Some(solves)
 }
 
+fn add_setups(setups: &mut HashSet<PcSetup>, piece_limit: usize, setup_list: &Vec<PcSetup>, game: &mut Game, stats: &Stats) {
+    // First, add in current piece and hold piece to make setting proper queue length easier
+    let mut full_queue = game.queue.clone();
+    if let Some(piece) = game.piece {
+        full_queue.push_front(piece);
+    }
+    if let Some(piece) = game.hold {
+        full_queue.push_front(piece);
+    }
+    // If we have 6/7 pieces from the bag, we can tell what the last one is
+    // The 6 comes from 5 pieces in queue, one currently about to place
+    if (stats.pieces + 6 + if game.hold.is_some() { 1 } else { 0 }) % 7 == 6 {
+        if game.bag.len() == 0 {
+            gen_bag(game);
+        }
+        full_queue.push_back(*game.bag.front().unwrap());
+    }
+    // Adjust so that we won't use anything beyond the piece limit
+    // e.g. don't want to use more than first 4 pieces for a 2nd PC setup
+    while full_queue.len() > piece_limit - (stats.pieces - game.pc_piece_num) as usize {
+        full_queue.pop_back();
+    }
+    let piece = full_queue.pop_front();
+    let hold = if game.piece.is_none() {
+        None
+    } else {
+        full_queue.pop_front()
+    };
+    for setup in setup_list.iter() {
+        if setup.can_build(&game.board, full_queue.clone(), piece, hold) {
+            setups.insert(setup.clone());
+        }
+    }
+}
+
 pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
-    let mut setups: Vec<PcSetup> = Vec::new();
+    // Use a hashset to remove duplicates
+    let mut setups: HashSet<PcSetup> = HashSet::new();
     let piece_num = game.pc_piece_num % 7 + 1;
+
     match piece_num {
-        1 => {
-            let mut full_queue = game.queue.clone();
-            // If we have 6/7 pieces from the bag, we can tell what the last one is
-            if stats.pieces == game.pc_piece_num {
-                if game.bag.len() == 0 {
-                    gen_bag(game);
-                }
-                full_queue.push_back(*game.bag.front().unwrap());
-            }
-            for setup in FIRST_PCS.iter() {
-                if setup.clone().can_build(&game.board, full_queue.clone(), game.piece, game.hold) {
-                    setups.push(setup.clone());
-                }
-            }
-        },
-        2 => {},
+        1 => add_setups(&mut setups, 7, &FIRST_PCS, game, stats),
+        2 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
         3 => {},
         4 => {},
         5 => {},
@@ -221,5 +244,8 @@ pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
         7 => {},
         _ => {},
     }
-    setups
+    // Collect as a sorted vec
+    let mut setup_list = setups.iter().cloned().collect::<Vec<PcSetup>>();
+    setup_list.sort();
+    setup_list
 }

@@ -1,6 +1,6 @@
 use crate::state::{Piece, Rotation};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Placement {
     Hold,
     Place {

@@ -239,7 +239,7 @@ impl Game {
 
         for setup in find_setups(self, stats).iter() {
             // Draw the setup build picture
-            let setup_height = setup.draw(&self.board, x, y + height, scale);
+            let setup_height = setup.draw(&self.board, x, y + height, scale, font);
             height += setup_height + margin();
         }
     }
