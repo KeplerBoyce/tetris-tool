@@ -217,13 +217,8 @@ fn add_setups(setups: &mut HashSet<PcSetup>, piece_limit: usize, setup_list: &Ve
         full_queue.pop_back();
     }
     let piece = full_queue.pop_front();
-    let hold = if game.piece.is_none() {
-        None
-    } else {
-        full_queue.pop_front()
-    };
     for setup in setup_list.iter() {
-        if setup.can_build(&game.board, full_queue.clone(), piece, hold) {
+        if setup.can_build(&game.board, full_queue.clone(), piece, None) {
             setups.insert(setup.clone());
         }
     }
@@ -236,9 +231,9 @@ pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
 
     match piece_num {
         1 => add_setups(&mut setups, 7, &FIRST_PCS, game, stats),
-        2 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
+        2 => {},
         3 => {},
-        4 => {},
+        4 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
         5 => {},
         6 => {},
         7 => {},

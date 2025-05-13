@@ -131,6 +131,16 @@ lazy_static! {
                     Placement::place(T, 21, 5, Cw),
                     Placement::place(I, 21, 4, Ccw),
                 ]),
+
+            /*** Factory ***/
+            PcSetup::new(
+                "Factory",
+                vec![
+                    Placement::place(I, 22, 7, Normal),
+                    Placement::place(J, 20, 9, Ccw),
+                    Placement::place(L, 21, 4, Cw),
+                    Placement::place(T, 21, 6, Normal),
+                ]),
         ];
         add_mirrors(&mut setups);
         setups
