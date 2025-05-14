@@ -39,7 +39,7 @@ pub fn add_mirrors(setups: &mut Vec<PcSetup>) {
                 Placement::Hold
             }
         }).collect();
-        mirrors.push(PcSetup::new(&format!("{} mirror", setup.name), new_placements));
+        mirrors.push(PcSetup::new(&format!("{}*", setup.name), new_placements));
     }
     setups.append(&mut mirrors);
 }
