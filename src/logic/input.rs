@@ -371,6 +371,8 @@ pub fn handle_input(
             // Clear path -- resets when you hold to avoid extra faults
             game.my_path = Vec::new();
             game.held = true;
+            // Refresh PC solutions because this might have made some impossible
+            game.refresh_pcs(cancel_flag, tx);
         }
     }
 }

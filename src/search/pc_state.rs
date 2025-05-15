@@ -7,6 +7,7 @@ pub struct PcState {
     pub queue_used: u8, // How many pieces from queue have been used
     pub piece: Option<Piece>,
     pub hold: Option<Piece>,
+    pub held: bool, // True when we have swapped with hold piece on this move
     pub height: u8, // Height of this PC (number of lines)
 }
 
@@ -17,6 +18,7 @@ impl PcState {
             queue_used: 0,
             piece: game.piece,
             hold: game.hold,
+            held: game.held,
             height,
         }
     }
@@ -129,6 +131,7 @@ impl PcState {
                 queue_used: self.queue_used + 1,
                 piece: queue.get(self.queue_used as usize).copied(),
                 hold: self.hold,
+                held: false,
                 height: self.height - num_cleared,
             };
             // If the successor will definitely fail, don't explore
@@ -143,22 +146,26 @@ impl PcState {
             )));
         }
         // Adding state for swapping with hold piece
-        if let Some(hold) = self.hold {
-            successors.push((Self {
-                board: self.board,
-                queue_used: self.queue_used,
-                piece: Some(hold),
-                hold: self.piece,
-                height: self.height,
-            }, Placement::Hold));
-        } else {
-            successors.push((Self {
-                board: self.board,
-                queue_used: self.queue_used + 1,
-                piece: queue.get(self.queue_used as usize).copied(),
-                hold: self.piece,
-                height: self.height,
-            }, Placement::Hold));
+        if !self.held {
+            if let Some(hold) = self.hold {
+                successors.push((Self {
+                    board: self.board,
+                    queue_used: self.queue_used,
+                    piece: Some(hold),
+                    hold: self.piece,
+                    held: true,
+                    height: self.height,
+                }, Placement::Hold));
+            } else {
+                successors.push((Self {
+                    board: self.board,
+                    queue_used: self.queue_used + 1,
+                    piece: queue.get(self.queue_used as usize).copied(),
+                    hold: self.piece,
+                    held: true,
+                    height: self.height,
+                }, Placement::Hold));
+            }
         }
         successors
     }
