@@ -12,6 +12,7 @@ use super::SetupState;
 pub struct PcSetup {
     pub name: String,
     pub placements: Vec<Placement>,
+    pub target_save: Option<Piece>, // The piece that we want to have on hold at the end
 }
 
 impl PcSetup {
@@ -19,6 +20,15 @@ impl PcSetup {
         Self {
             name: name.to_string(),
             placements,
+            target_save: None,
+        }
+    }
+
+    pub fn new_with_save(name: &str, placements: Vec<Placement>, target_save: Piece) -> Self {
+        Self {
+            name: name.to_string(),
+            placements,
+            target_save: Some(target_save),
         }
     }
 
@@ -121,6 +131,13 @@ impl PcSetup {
         while let Some(state) = stack.pop() {
             // Successfully built
             if state.placements.len() == 0 {
+                // Only return true if we saved the correct piece
+                if let Some(save) = self.target_save {
+                    if state.hold == Some(save) {
+                        return true;
+                    }
+                    continue;
+                }
                 return true;
             }
             if visited.contains(&state) {

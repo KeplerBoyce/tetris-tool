@@ -39,7 +39,18 @@ pub fn add_mirrors(setups: &mut Vec<PcSetup>) {
                 Placement::Hold
             }
         }).collect();
-        mirrors.push(PcSetup::new(&format!("{}*", setup.name), new_placements));
+        if let Some(save) = setup.target_save {
+            // Also mirror the save piece if we have a target save for this setup
+            mirrors.push(PcSetup::new_with_save(&format!("{}*", setup.name), new_placements, match save {
+                J => L,
+                L => J,
+                S => Z,
+                Z => S,
+                _ => save,
+            }));
+        } else {
+            mirrors.push(PcSetup::new(&format!("{}*", setup.name), new_placements));
+        }
     }
     setups.append(&mut mirrors);
 }

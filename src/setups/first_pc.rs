@@ -8,9 +8,9 @@ lazy_static! {
     pub static ref FIRST_PCS: Vec<PcSetup> = {
         let mut setups = vec![
 
-            /*** PCO save I ***/
-            PcSetup::new(
-                "PCO Save I",
+            /*** PCO (save I) ***/
+            PcSetup::new_with_save(
+                "PCO (save I)",
                 vec![
                     Placement::place(J, 22, 1, Normal),
                     Placement::place(O, 20, 1, Normal),
@@ -18,9 +18,11 @@ lazy_static! {
                     Placement::place(Z, 22, 7, Normal),
                     Placement::place(T, 21, 9, Ccw),
                     Placement::place(S, 20, 8, Normal),
-                ]),
-            PcSetup::new(
-                "PCO Save I",
+                ],
+                I,
+            ),
+            PcSetup::new_with_save(
+                "PCO (save I)",
                 vec![
                     Placement::place(L, 22, 1, Normal),
                     Placement::place(O, 20, 0, Normal),
@@ -28,7 +30,9 @@ lazy_static! {
                     Placement::place(Z, 22, 7, Normal),
                     Placement::place(T, 21, 9, Ccw),
                     Placement::place(S, 20, 8, Normal),
-                ]),
+                ],
+                I,
+            ),
 
             /*** PCO use I ***/
             PcSetup::new(
