@@ -232,7 +232,7 @@ pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
     match piece_num {
         1 => add_setups(&mut setups, 7, &FIRST_PCS, game, stats),
         2 => {},
-        3 => {},
+        3 => add_setups(&mut setups, 5, &FOURTH_PCS, game, stats),
         4 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
         5 => {},
         6 => {},
