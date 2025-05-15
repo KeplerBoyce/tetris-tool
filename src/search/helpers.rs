@@ -235,7 +235,7 @@ pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
         3 => add_setups(&mut setups, 5, &FOURTH_PCS, game, stats),
         4 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
         5 => {},
-        6 => {},
+        6 => add_setups(&mut setups, 2, &FIFTH_PCS, game, stats),
         7 => add_setups(&mut setups, 8, &THIRD_PCS, game, stats),
         _ => {},
     }
