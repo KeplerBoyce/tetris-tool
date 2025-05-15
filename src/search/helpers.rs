@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use crossbeam_channel::Sender;
 use crate::logic::{gen_bag, Stats};
-use crate::setups::{PcSetup, FIRST_PCS, SECOND_PCS};
+use crate::setups::*;
 use crate::state::{Board, Game, Piece, Rotation};
 use super::{Movement, Pc, PcState, Placement, SearchState};
 
@@ -236,7 +236,7 @@ pub fn find_setups(game: &mut Game, stats: &Stats) -> Vec<PcSetup> {
         4 => add_setups(&mut setups, 4, &SECOND_PCS, game, stats),
         5 => {},
         6 => {},
-        7 => {},
+        7 => add_setups(&mut setups, 8, &THIRD_PCS, game, stats),
         _ => {},
     }
     // Collect as a sorted vec

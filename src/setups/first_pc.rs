@@ -34,9 +34,9 @@ lazy_static! {
                 I,
             ),
 
-            /*** PCO use I ***/
+            /*** PCO ***/
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(J, 22, 1, Normal),
                     Placement::place(O, 20, 1, Normal),
@@ -47,7 +47,7 @@ lazy_static! {
                     Placement::place(I, 21, 3, Ccw),
                 ]),
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(L, 22, 1, Normal),
                     Placement::place(O, 20, 0, Normal),
@@ -58,7 +58,7 @@ lazy_static! {
                     Placement::place(I, 21, 3, Ccw),
                 ]),
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(I, 22, 1, Normal),
                     Placement::place(L, 20, 0, Cw),
@@ -69,7 +69,7 @@ lazy_static! {
                     Placement::place(S, 20, 8, Normal),
                 ]),
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(I, 19, 1, Normal),
                     Placement::place(L, 21, 0, Cw),
@@ -80,7 +80,7 @@ lazy_static! {
                     Placement::place(S, 20, 8, Normal),
                 ]),
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(I, 22, 1, Normal),
                     Placement::place(O, 20, 1, Normal),
@@ -91,7 +91,7 @@ lazy_static! {
                     Placement::place(S, 20, 8, Normal),
                 ]),
             PcSetup::new(
-                "PCO Use I",
+                "PCO",
                 vec![
                     Placement::place(O, 21, 1, Normal),
                     Placement::place(J, 21, 0, Cw),
@@ -103,7 +103,7 @@ lazy_static! {
                 ]),
 
             /*** Jigsaw Jaws Variant ***/
-            PcSetup::new(
+            PcSetup::new_with_save(
                 "Jigsaw Jaws",
                 vec![
                     Placement::place(I, 21, 0, Ccw),
@@ -112,10 +112,12 @@ lazy_static! {
                     Placement::place(L, 19, 2, Flip),
                     Placement::place(O, 21, 5, Normal),
                     Placement::place(J, 21, 8, Flip),
-                ]),
+                ],
+                T,
+            ),
 
             /*** Jigsaw PCO Variant ***/
-            PcSetup::new(
+            PcSetup::new_with_save(
                 "Jigsaw PCO",
                 vec![
                     Placement::place(I, 21, 0, Ccw),
@@ -124,7 +126,35 @@ lazy_static! {
                     Placement::place(Z, 20, 2, Normal),
                     Placement::place(O, 21, 5, Normal),
                     Placement::place(J, 21, 8, Flip),
-                ]),
+                ],
+                L,
+            ),
+
+            /*** Grace System ***/
+            PcSetup::new_with_save(
+                "Grace System",
+                vec![
+                    Placement::place(J, 22, 1, Normal),
+                    Placement::place(L, 22, 4, Normal),
+                    Placement::place(S, 20, 0, Cw),
+                    Placement::place(Z, 20, 5, Ccw),
+                    Placement::place(O, 20, 2, Normal),
+                    Placement::place(I, 19, 2, Normal),
+                ],
+                T,
+            ),
+            PcSetup::new_with_save(
+                "Grace System",
+                vec![
+                    Placement::place(I, 22, 2, Normal),
+                    Placement::place(O, 20, 2, Normal),
+                    Placement::place(Z, 21, 1, Ccw),
+                    Placement::place(S, 21, 4, Cw),
+                    Placement::place(L, 19, 1, Flip),
+                    Placement::place(J, 19, 4, Flip),
+                ],
+                T,
+            ),
         ];
         add_mirrors(&mut setups);
         setups
