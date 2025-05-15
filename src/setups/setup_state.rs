@@ -9,6 +9,7 @@ pub struct SetupState {
     pub queue: VecDeque<Piece>,
     pub piece: Option<Piece>,
     pub hold: Option<Piece>,
+    pub held: bool, // True when we have already swapped for hold piece on this move
 }
 
 impl SetupState {
@@ -18,6 +19,7 @@ impl SetupState {
         queue: VecDeque<Piece>,
         piece: Option<Piece>,
         hold: Option<Piece>,
+        held: bool,
     ) -> Self {
         Self {
             board,
@@ -25,6 +27,7 @@ impl SetupState {
             queue,
             piece,
             hold,
+            held,
         }
     }
 
@@ -47,20 +50,23 @@ impl SetupState {
                         successor.board = successor.board.with_placement(piece, row, col, rotation);
                     }
                     successor.piece = successor.queue.pop_front();
+                    successor.held = false;
                     list.push(successor);
                 }
             }
         }
-        // Hold option
-        successor = self.clone();
-        if let Some(hold) = self.hold {
-            successor.hold = self.piece;
-            successor.piece = Some(hold);
-        } else {
-            successor.hold = self.piece;
-            successor.piece = successor.queue.pop_front();
+        // Hold option -- only allow if hold hasn't been used yet
+        if !self.held {
+            successor = self.clone();
+            if let Some(hold) = self.hold {
+                successor.hold = self.piece;
+                successor.piece = Some(hold);
+            } else {
+                successor.hold = self.piece;
+                successor.piece = successor.queue.pop_front();
+            }
+            list.push(successor);
         }
-        list.push(successor);
         list
     }
 }

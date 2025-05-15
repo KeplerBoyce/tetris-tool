@@ -197,10 +197,10 @@ fn find_pcs_helper(game: &Game, cancel_flag: Arc<AtomicBool>) -> Option<Vec<Pc>>
 fn add_setups(setups: &mut HashSet<PcSetup>, piece_limit: usize, setup_list: &Vec<PcSetup>, game: &mut Game, stats: &Stats) {
     // First, add in current piece and hold piece to make setting proper queue length easier
     let mut full_queue = game.queue.clone();
-    if let Some(piece) = game.piece {
+    if let Some(piece) = game.hold {
         full_queue.push_front(piece);
     }
-    if let Some(piece) = game.hold {
+    if let Some(piece) = game.piece {
         full_queue.push_front(piece);
     }
     // If we have 6/7 pieces from the bag, we can tell what the last one is
@@ -218,7 +218,7 @@ fn add_setups(setups: &mut HashSet<PcSetup>, piece_limit: usize, setup_list: &Ve
     }
     let piece = full_queue.pop_front();
     for setup in setup_list.iter() {
-        if setup.can_build(&game.board, full_queue.clone(), piece, None) {
+        if setup.can_build(&game.board, full_queue.clone(), piece, None, game.held) {
             setups.insert(setup.clone());
         }
     }

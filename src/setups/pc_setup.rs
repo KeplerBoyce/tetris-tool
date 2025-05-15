@@ -59,7 +59,14 @@ impl PcSetup {
         (new_placements, minos_filled)
     }
 
-    pub fn can_build(&self, board: &Board, queue: VecDeque<Piece>, piece: Option<Piece>, hold: Option<Piece>) -> bool {
+    pub fn can_build(
+        &self,
+        board: &Board,
+        queue: VecDeque<Piece>,
+        piece: Option<Piece>,
+        hold: Option<Piece>,
+        held: bool,
+    ) -> bool {
         // First, eliminate pieces that are already filled by the board
         let (remaining_placements, minos_filled) = self.get_remaining_placements(board);
         // If we have already built the whole thing, don't want to include this in setup list
@@ -124,7 +131,7 @@ impl PcSetup {
         // This stack contains all of the remaining placements that need to be made as well as the
         // current state of the queue, piece, and hold piece.
         let mut stack: Vec<SetupState> = vec![
-            SetupState::new(*board, remaining_placements.clone(), queue.clone(), piece, hold),
+            SetupState::new(*board, remaining_placements.clone(), queue.clone(), piece, hold, held),
         ];
         let mut visited: HashSet<SetupState> = HashSet::new();
 
