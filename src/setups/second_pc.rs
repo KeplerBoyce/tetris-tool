@@ -244,9 +244,9 @@ lazy_static! {
                 O,
             ),
 
-            /*** STZ/SLT (save I) ***/
+            /*** STZ/SJT (save I) ***/
             PcSetup::new_with_save(
-                "STZ/SLT (save I)",
+                "STZ/SJT (save I)",
                 vec![
                     Placement::place(S, 22, 1, Normal),
                     Placement::place(T, 22, 3, Normal),
@@ -255,10 +255,10 @@ lazy_static! {
                 I,
             ),
             PcSetup::new_with_save(
-                "STZ/SLT (save I)",
+                "STZ/SJT (save I)",
                 vec![
                     Placement::place(S, 22, 1, Normal),
-                    Placement::place(L, 21, 3, Ccw),
+                    Placement::place(J, 21, 3, Ccw),
                     Placement::place(T, 21, 4, Cw),
                 ],
                 I,
