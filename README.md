@@ -10,9 +10,10 @@ cargo run --release
 ```
 
 ### Features
-Currently offers finesse practice (including optimal finesse on complex soft drops) and perfect clear setups and solutions for 1st, 2nd, 3rd, 4th, and 5th PC.
+Currently offers finesse practice (including optimal finesse on complex soft drops) and perfect clear setups for 1st, 2nd, 3rd, 4th, and 5th PC as well as DPC. An additional PC solve finder is always running, so if at any point a PC solution is found given the current board state, queue, and hold piece, it will display a picture of the solution and the order of placements. The solver is running on a separate thread to avoid interrupting the gameplay thread.
 
 ### Planned features
+- Additional separate thread for the setup finder. Typically the setup finder is extremely fast so it doesn't block gameplay as the solver would, but in situations with a large number of buildable setups, it does cause stuttering issues, so I plan to move this to a separate thread as well.
 - More PC setups as well as more advanced lookahead, such as identifying solve chances for various setups.
 - Stricter requirements for certain setups.
   - For 3rd PC, the setup finder will sometimes suggest extra T setups, for example, even when the piece on hold from 2nd PC is not a T piece (the setup is buildable with the given queue, it just won't work as intended since there is no second T coming in the future).
